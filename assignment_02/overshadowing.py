@@ -1,7 +1,7 @@
 from abc_classical_conditioning_paradigm import ClassicalConditioningParadigm
 
 
-class OvershadowingParadigm(ClassicalConditioningParadigm):
+class Overshadowing(ClassicalConditioningParadigm):
     def pre_training(self, pre_training_trials=0):
         pass
 
@@ -19,9 +19,9 @@ class OvershadowingParadigm(ClassicalConditioningParadigm):
 
 training_trials = 100
 pre_training_trials = 50
-overshadowing = OvershadowingParadigm(alpha1=0.1,
-                                      alpha2=0.05,
-                                      lambda_=1.0)
+overshadowing = Overshadowing(alpha1=0.1,
+                              alpha2=0.05,
+                              lambda_=1.0)
 overshadowing.run(pre_training_trials=pre_training_trials,
                   training_trials=training_trials)
 overshadowing.plot_history("Overshadowing Paradigm")
