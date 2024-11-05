@@ -1,0 +1,40 @@
+from abc_classical_conditioning_paradigm import ClassicalConditioningParadigm
+
+class BlockingParadigm(ClassicalConditioningParadigm):
+    def pre_training(self, pre_training_trials=0):
+        """
+        Pre-training phase for blocking
+
+        Parameters:
+        - pre_training_trials (int): Number of pre-training trials
+        """
+        # S1 is presented alone with a reward
+        for trial in range(pre_training_trials):
+            present_stimuli = ["S1"]
+            reward = self.lambda_
+            self.update_associative_strength(present_stimuli, reward)
+
+    def training(self, training_trials=0):
+        """
+        Training phase for blocking
+
+        Parameters:
+        - training_trials (int): Number of training trials
+        """
+        # both S1 and S2 are presented together with a reward.
+        for trial in range(training_trials):
+            present_stimuli = ["S1", "S2"]  #
+            reward = self.lambda_
+            self.update_associative_strength(present_stimuli, reward)
+
+
+
+pre_train_trials = 10
+train_trials = 50
+
+blocking = BlockingParadigm(alpha1=0.1,
+                            alpha2=0.1,
+                            lambda_=1.0)
+
+blocking.run(pre_training_trials=pre_train_trials, training_trials=train_trials)
+blocking.plot_history("Blocking Paradigm")
