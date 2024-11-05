@@ -31,13 +31,15 @@ class ClassicalConditioningParadigm(ABC):
         delta_v1 = self.alpha1 * (reward - v_total) if "S1" in present_stimuli else 0
         delta_v2 = self.alpha2 * (reward - v_total) if "S2" in present_stimuli else 0
 
-        # Update associative strengths and record history
+        # Update associative strengths
         if "S1" in present_stimuli:
             self.V["S1"] += delta_v1
-            self.history["S1"].append(self.V["S1"])
         if "S2" in present_stimuli:
             self.V["S2"] += delta_v2
-            self.history["S2"].append(self.V["S2"])
+
+        # Record the associative strength history for both stimuli on every trial
+        self.history["S1"].append(self.V["S1"])
+        self.history["S2"].append(self.V["S2"])
 
     @abstractmethod
     def pre_training(self, pre_training_trials=0):

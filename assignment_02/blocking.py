@@ -29,7 +29,7 @@ class Blocking(ClassicalConditioningParadigm):
 
 
 
-pre_train_trials = 10
+pre_train_trials = 50
 train_trials = 50
 
 blocking = Blocking(alpha1=0.1,
