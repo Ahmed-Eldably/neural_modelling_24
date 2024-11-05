@@ -1,7 +1,7 @@
 from abc_classical_conditioning_paradigm import ClassicalConditioningParadigm
 
 
-class InhibitoryConditioningParadigm(ClassicalConditioningParadigm):
+class InhibitoryConditioning(ClassicalConditioningParadigm):
 
     def pre_training(self, pre_training_trials=0):
         """Define the pre-training phase, if applicable."""
@@ -20,15 +20,15 @@ class InhibitoryConditioningParadigm(ClassicalConditioningParadigm):
             else:
                 # present S1 and S2 together with no reward to build inhibition
                 present_stimuli = ["S1", "S2"]
-                reward = 0.0  # No reward given
+                reward = 0.0
 
             self.update_associative_strength(present_stimuli, reward)
 
 
 train_trials = 100
 
-inhibitory_conditioning = InhibitoryConditioningParadigm(alpha1=0.1,
-                                                         alpha2=0.1,
-                                                         lambda_=1.0)
+inhibitory_conditioning = InhibitoryConditioning(alpha1=0.1,
+                                                 alpha2=0.1,
+                                                 lambda_=1.0)
 inhibitory_conditioning.run(training_trials=train_trials)
 inhibitory_conditioning.plot_history("Inhibitory Conditioning Paradigm")

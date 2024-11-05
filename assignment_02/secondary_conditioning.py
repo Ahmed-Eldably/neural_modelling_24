@@ -1,9 +1,10 @@
 from abc_classical_conditioning_paradigm import ClassicalConditioningParadigm
 
-class Blocking(ClassicalConditioningParadigm):
+
+class SecondaryConditioning(ClassicalConditioningParadigm):
     def pre_training(self, pre_training_trials=0):
         """
-        Pre-training phase for blocking
+        Pre-training phase for Secondary Conditioning
 
         Parameters:
         - pre_training_trials (int): Number of pre-training trials
@@ -16,7 +17,7 @@ class Blocking(ClassicalConditioningParadigm):
 
     def training(self, training_trials=0):
         """
-        Training phase for blocking
+        Training phase for Secondary Conditioning
 
         Parameters:
         - training_trials (int): Number of training trials
@@ -24,17 +25,17 @@ class Blocking(ClassicalConditioningParadigm):
         # both S1 and S2 are presented together with a reward.
         for trial in range(training_trials):
             present_stimuli = ["S1", "S2"]
-            reward = self.lambda_
+            reward = 0.0
             self.update_associative_strength(present_stimuli, reward)
 
 
-
 pre_train_trials = 10
-train_trials = 50
+train_trials = 90
 
-blocking = Blocking(alpha1=0.1,
-                    alpha2=0.1,
-                    lambda_=1.0)
+secondary_conditioning = SecondaryConditioning(alpha1=0.1,
+                                               alpha2=0.1,
+                                               lambda_=1.0)
+secondary_conditioning.run(pre_training_trials=pre_train_trials,
+                           training_trials=train_trials)
 
-blocking.run(pre_training_trials=pre_train_trials, training_trials=train_trials)
-blocking.plot_history("Blocking Paradigm")
+secondary_conditioning.plot_history("Secondary Conditioning Paradigm")
