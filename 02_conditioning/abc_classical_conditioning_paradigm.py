@@ -26,7 +26,7 @@ class ClassicalConditioningParadigm(ABC):
         - present_stimuli (list): List of stimuli presented in the trial (e.g., ['S1', 'S2'])
         - reward (float): The reward value for the trial
         """
-        # Calculate total associative strength prediction for all present stimuli
+        # Calculate total associative strength prediction
         v_total = sum(self.V[stimulus] for stimulus in present_stimuli)
         delta_v1 = self.alpha1 * (reward - v_total) if "S1" in present_stimuli else 0
         delta_v2 = self.alpha2 * (reward - v_total) if "S2" in present_stimuli else 0
@@ -37,7 +37,7 @@ class ClassicalConditioningParadigm(ABC):
         if "S2" in present_stimuli:
             self.V["S2"] += delta_v2
 
-        # Record the associative strength history for both stimuli on every trial
+        # Record the associative strength history
         self.history["S1"].append(self.V["S1"])
         self.history["S2"].append(self.V["S2"])
 
