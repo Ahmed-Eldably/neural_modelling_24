@@ -12,7 +12,7 @@ class SecondaryConditioning(ClassicalConditioningParadigm):
         # S1 is presented alone with a reward
         for trial in range(pre_training_trials):
             present_stimuli = ["S1"]
-            reward = self.lambda_
+            reward = self.max_reward
             self.update_associative_strength(present_stimuli, reward)
 
     def training(self, training_trials=0):
@@ -32,9 +32,9 @@ class SecondaryConditioning(ClassicalConditioningParadigm):
 pre_train_trials = 10
 train_trials = 90
 
-secondary_conditioning = SecondaryConditioning(alpha1=0.1,
-                                               alpha2=0.1,
-                                               lambda_=1.0)
+secondary_conditioning = SecondaryConditioning(learning_rate_1=0.1,
+                                               learning_rate_2=0.1,
+                                               max_reward=1.0)
 secondary_conditioning.run(pre_training_trials=pre_train_trials,
                            training_trials=train_trials)
 
