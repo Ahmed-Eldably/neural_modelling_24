@@ -7,7 +7,7 @@ from helper.rescorla_wagner_model import RescorlaWagnerModel
 class ClassicalConditioningParadigm(ABC):
     def __init__(self,
                  learning_rate_1=0.1,
-                 learning_rate_2=0.05,
+                 learning_rate_2=0.1,
                  max_reward=1.0):
         """
         Parameters:
@@ -24,7 +24,7 @@ class ClassicalConditioningParadigm(ABC):
             learning_rates={"S1": learning_rate_1, "S2": learning_rate_2}
         )
 
-    def update_associative_strength(self, present_stimuli, reward):
+    def update_associative_strength(self, present_stimuli, reward, present_entities=None, belief=None):
         """
         Applies the Rescorla-Wagner rule to update associative strengths for each stimulus.
 
@@ -33,7 +33,7 @@ class ClassicalConditioningParadigm(ABC):
         - reward (float): The reward value for the trial
         """
         # Use Rescorla-Wagner model to update associative strengths
-        self.rw_model.update_strengths(present_stimuli, reward)
+        self.rw_model.update_strengths(reward=reward, present_stimuli=present_stimuli)
 
         # Record associative strengths for each stimulus
         associations = self.rw_model.get_associations()
