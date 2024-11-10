@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-This project simulates various conditioning paradigms using the Rescorla-Wagner (RW) model, a foundational model in computational neuroscience for learning associations between stimuli and rewards. This project explores how the RW model performs across different paradigms: Blocking, Inhibitory Conditioning, Overshadowing, Secondary Conditioning, and Explaining Away. Additionally, we apply the RW model to examine an Extinction paradigm.
+This project simulates various classical conditioning paradigms using the Rescorla-Wagner (RW) model, a foundational model in computational neuroscience for learning associations between stimuli and rewards. This project explores how the RW model performs across different paradigms: Blocking, Inhibitory Conditioning, Overshadowing, Secondary Conditioning, and Explaining Away. Additionally, we apply the RW model to examine an Extinction paradigm.
 ## Table of Contents
 1. [Project Overview](#project-overview)
 2. [Implemented Paradigms](#implemented-paradigms)
