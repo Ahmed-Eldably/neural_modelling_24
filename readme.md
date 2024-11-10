@@ -51,7 +51,7 @@ This project simulates various conditioning paradigms using the Rescorla-Wagner 
    
 ## Usage
 
-Still work in progress to simulate all paradigms. For now running each paradigm in 02_conditioning or 03_extinction should be enough to get the graphs.
+Still, work in progress to simulate all paradigms from one file. For now, running each paradigm in 02_conditioning or 03_extinction should be enough to get the graphs.
 Also, the plots are already saved in each folder.
 
 ## References
