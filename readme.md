@@ -55,7 +55,6 @@ Still, work in progress to simulate all paradigms from one file. For now, runnin
 Also, the plots are already saved in each folder.
 
 ## References
-   * Rescorla, R. A., & Wagner, A. R. (1972). "A theory of Pavlovian conditioning: Variations in the effectiveness of reinforcement and nonreinforcement."
    * Wilson, W. J. (2012). The Rescorla-Wagner Model, Simplified. Albion College. Disponible en:< http://webcache. googleusercontent. com/search.
    * Rescorla, R.A., 1972. A theory of Pavlovian conditioning: Variations in the effectiveness of reinforcement and non-reinforcement. Classical conditioning, Current research and theory, 2, pp.64-69.
    * Dayan, P., & Abbott, L. F. (2005). Theoretical neuroscience: computational and mathematical modeling of neural systems. MIT press.
