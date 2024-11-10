@@ -1,4 +1,4 @@
-# Neural Modelling 2024 Course - University of Tübingen
+# Neural Modelling Winter 2024 Course - University of Tübingen
 
 ## Project Overview
 
