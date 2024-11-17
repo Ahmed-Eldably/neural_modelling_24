@@ -1,112 +1,105 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 class TemporalDifferenceLearning:
     """
     A class for Temporal Difference Learning to predict future rewards.
     """
     def __init__(self, n_time_steps, alpha, gamma=0.9):
-        """
-        Initialize the TD learning model.
+        if not (0 <= alpha <= 1):
+            raise ValueError("Alpha (learning rate) must be between 0 and 1.")
+        if not (0 <= gamma <= 1):
+            raise ValueError("Gamma (discount factor) must be between 0 and 1.")
+        if n_time_steps <= 0:
+            raise ValueError("n_time_steps must be a positive integer.")
 
-        Parameters:
-        - n_time_steps (int): Total number of time steps per trial.
-        - alpha (float): Learning rate (alpha).
-        - gamma (float): Discount factor for future rewards (gamma).
-        """
         self.n_time_steps = n_time_steps
         self.alpha = alpha
         self.gamma = gamma
         self.V = np.zeros(n_time_steps)  # Prediction vector V(t)
         self.delta = np.zeros(n_time_steps)  # Temporal Difference Error (delta)
+        self.predictions_over_trials = []  # Store predictions over multiple trials
+        self.delta_over_trials = []  # Store delta values over multiple trials
 
     def update(self, reward_vector, stimulus_vector=None):
-        """
-        Perform one trial of TD learning.
-
-        Parameters:
-        - reward_vector (np.array): Reward signal (r(t)) for each time step.
-        - stimulus_vector (np.array): Stimulus signal (u(t)) for each time step (optional).
-        """
         V_prev = np.copy(self.V)  # Store previous predictions
 
-        # Temporal Difference Update over time steps
-        for t in range(self.n_time_steps - 1):
-            # Calculate the temporal difference error δ(t)
-            self.delta[t] = reward_vector[t] + self.gamma * V_prev[t + 1] - V_prev[t]
+        for t in range(self.n_time_steps):
+            # Temporal Difference Update
+            if t < self.n_time_steps - 1:
+                self.delta[t] = reward_vector[t] + self.gamma * V_prev[t + 1] - V_prev[t]
+                self.V[t] += self.alpha * self.delta[t]
 
-            # Update predictions V(t) using TD learning rule
-            self.V[t] += self.alpha * self.delta[t]
-
-        # Immediate adjustment for stimulus influence (if provided)
-        if stimulus_vector is not None:
-            for t in range(self.n_time_steps):
-                if stimulus_vector[t] > 0:
-                    # Directly update V(t) where stimulus is present to ensure learning influence
-                    self.V[t] += self.alpha * (1.0 - self.V[t])
+            # Immediate adjustment for stimulus influence if applicable
+            if stimulus_vector is not None and stimulus_vector[t] > 0:
+                self.V[t] += self.alpha * (1.0 - self.V[t])
 
     def reset(self):
-        """Reset predictions and errors for a new set of trials."""
         self.V = np.zeros(self.n_time_steps)
         self.delta = np.zeros(self.n_time_steps)
 
+    def run_trials(self, reward_vector, stimulus_vector, num_trials):
+        if len(reward_vector) != self.n_time_steps or (stimulus_vector is not None and len(stimulus_vector) != self.n_time_steps):
+            raise ValueError("The length of reward_vector and stimulus_vector must match n_time_steps.")
+
+        self.predictions_over_trials = []
+        self.delta_over_trials = []
+
+        for trial in range(num_trials):
+            self.update(reward_vector, stimulus_vector)
+            self.predictions_over_trials.append(self.get_predictions().copy())
+            self.delta_over_trials.append(self.get_temporal_difference_error().copy())
+
     def get_predictions(self):
-        """Return the current prediction vector."""
         return self.V
 
     def get_temporal_difference_error(self):
-        """Return the temporal difference error vector."""
         return self.delta
 
+    def plot_3d_predictions(self, cmap='viridis'):
+        if not self.predictions_over_trials:
+            raise ValueError("No trials have been run. Please run trials before plotting.")
 
-# Re-test with the corrected implementation
-n_time_steps = 300
-alpha = 0.1
-gamma = 0.9
-td_model = TemporalDifferenceLearning(n_time_steps, alpha, gamma)
+        predictions_over_trials = np.array(self.predictions_over_trials)
+        num_trials = len(self.predictions_over_trials)
 
-# Stimulus and reward vectors
-stimulus_vector = np.zeros(n_time_steps)
-reward_vector = np.zeros(n_time_steps)
-stimulus_time = 100
-reward_time = 200
-stimulus_vector[stimulus_time] = 1
-reward_vector[reward_time] = 1
+        fig = plt.figure(figsize=(12, 8))
+        ax = fig.add_subplot(111, projection='3d')
 
-# Reset the model
-td_model.reset()
+        t = np.arange(self.n_time_steps)
+        trials = np.arange(num_trials)
+        t, trials = np.meshgrid(t, trials)
 
-for trial in range(100):
-    td_model.update(reward_vector, stimulus_vector)
+        ax.plot_surface(t, trials, predictions_over_trials, cmap=cmap)
+        ax.set_title("3D Visualization of Predictions (V) over Trials")
+        ax.set_xlabel("Time Steps")
+        ax.set_ylabel("Trials")
+        ax.set_zlabel("Value (V)")
 
-# Fetch predictions and errors after all trials
-predictions = td_model.get_predictions()
-errors = td_model.get_temporal_difference_error()
+        plt.tight_layout()
+        plt.show()
 
-# Display updated predictions and errors near stimulus and reward
-print("Updated Predictions (V) after 10 trials (around stimulus):", predictions[90:110])
-print("Updated Predictions (V) after 10 trials (around reward):", predictions[190:210])
-print("\nUpdated Errors (δ) after 10 trials (around stimulus):", errors[90:110])
-print("Updated Errors (δ) after 10 trials (around reward):", errors[190:210])
+    def plot_3d_delta(self, cmap='plasma'):
+        if not self.delta_over_trials:
+            raise ValueError("No trials have been run. Please run trials before plotting.")
 
-# Easy values to test
-# Manually setting reward and stimulus to check correct propagation
-stimulus_vector = np.zeros(n_time_steps)
-reward_vector = np.zeros(n_time_steps)
-stimulus_vector[50] = 1  # Set a simple stimulus at t=50
-reward_vector[100] = 1  # Set a reward at t=100
+        delta_over_trials = np.array(self.delta_over_trials)
+        num_trials = len(self.delta_over_trials)
 
-# Reset the model for a simple test
-td_model.reset()
+        fig = plt.figure(figsize=(12, 8))
+        ax = fig.add_subplot(111, projection='3d')
 
-# Run a single trial with the simple stimulus and reward
-td_model.update(reward_vector, stimulus_vector)
+        t = np.arange(self.n_time_steps)
+        trials = np.arange(num_trials)
+        t, trials = np.meshgrid(t, trials)
 
-# Fetch predictions and errors for inspection
-predictions = td_model.get_predictions()
-errors = td_model.get_temporal_difference_error()
+        ax.plot_surface(t, trials, delta_over_trials, cmap=cmap)
+        ax.set_title("3D Visualization of Temporal Difference Error (Delta) over Trials")
+        ax.set_xlabel("Time Steps")
+        ax.set_ylabel("Trials")
+        ax.set_zlabel("TD Error (Delta)")
 
-# Display predictions and errors near test values
-print("\nSimple Test - Predictions (V) around stimulus at t=50:", predictions[40:60])
-print("Expected Prediction (V) at t=50: 0.1")
+        plt.tight_layout()
+        plt.show()
 
