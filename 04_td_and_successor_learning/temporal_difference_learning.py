@@ -102,4 +102,3 @@ class TemporalDifferenceLearning:
 
         plt.tight_layout()
         plt.show()
-
