@@ -1,60 +1,56 @@
-# Neural Modelling Winter 2024 Course - University of Tübingen
+# Neural Modelling Winter 2024 - University of Tübingen
 
-## Project Overview
+## Overview
 
-This project simulates various classical conditioning paradigms using the Rescorla-Wagner (RW) model, a foundational model in computational neuroscience for learning associations between stimuli and rewards. This project explores how the RW model performs across different paradigms: Blocking, Inhibitory Conditioning, Overshadowing, Secondary Conditioning, and Explaining Away. Additionally, we apply the RW model to examine an Extinction paradigm.
-## Table of Contents
-1. [Project Overview](#project-overview)
-2. [Implemented Paradigms](#implemented-paradigms)
-3. [Setup and Installation](#setup-and-installation)
-4. [Usage](#usage)
-5. [References](#references)
+This repository contains implementations of key reinforcement learning and neural modeling paradigms for the **Neural Modelling Winter 2024 Course**. The project explores classical and modern computational neuroscience techniques, including **Rescorla-Wagner models**, **temporal difference learning**, and **successor representation-based actor-critic frameworks**. Each module demonstrates foundational principles in learning and decision-making.
 
-## Implemented Paradigms
+---
 
-### 1. Blocking
-   - **Description**: Tests whether a previously learned association with a stimulus (e.g., S1) blocks a new stimulus (S2) from forming a similar association.
-   - **Expected Outcome**: S1 should maintain a strong association, while S2 remains weakly associated or not at all.
+## Directory Structure
 
-###  2. Inhibitory Conditioning
-   - **Description**: Tests the model's ability to learn that S2 predicts the absence of a reward.
-   - **Expected Outcome**: S1 should be positively associated with the reward, while S2 should indicate the absence of the reward.
+- **`02_prediction_learning`**: Classical conditioning paradigms using the Rescorla-Wagner model, including Blocking, Overshadowing, and Secondary Conditioning. Plots are included in the `graphs/` folder.
+- **`03_td_and_successor_learning`**: Implementation of temporal difference learning and successor representation to model prediction and decision processes.
+- **`04_model_fitting_and_pavlovian_biases`**: Analysis of Pavlovian-instrumental interactions and model fitting with experimental data.
+- **`05_learning_how_to_act`**: Actor-critic models with static and dynamic successor representations, exploring policy learning in a maze environment.
+- **`helper/`**: Utility functions, including Rescorla-Wagner model computations.
 
-### 3. Overshadowing
-   - **Description**: Examines how a stronger stimulus (S1) can overshadow a less salient one (S2) when both are presented together.
-   - **Expected Outcome**: S1 should dominate in associative strength, with S2 showing a lesser association.
-
-### 4. Secondary Conditioning
-   - **Description**: Explores indirect association, where S2 should form an association with the reward via S1.
-   - **Expected Outcome**: Ideally, S2 should develop an indirect association with the reward.
-
-### 5. Explaining Away
-   - **Description**: Tests how an animal adjusts its expectations when one stimulus is absent.
-   - **Expected Outcome**: Initial associations with both stimuli are strong, but expectations decrease when one stimulus is absent.
-
-### 6. Extinction Paradigm
-   - **Description**: Involves conditioning a stimulus (S1) to a reward, followed by extinction trials with no reward, and then a delayed test.
-   - **Expected Outcome**: The model should capture a decrease in the association during extinction, with potential recovery during the test.
+---
 
 ## Setup and Installation
 
 ### Prerequisites
+
 - Python 3.10+
-- Required packages: `numpy`, `matplotlib`
+- Libraries: `numpy`, `matplotlib`
 
 ### Installation
+
 1. Clone the repository:
    ```bash
-   git clone git@github.com:Ahmed-Eldably/neural_modelling_24.git
-   cd neural modelling_24
+   git clone https://github.com/aeldably/neural_modelling_24/tree/master
+   cd neural_modelling
    ```
-   
-## Usage
 
-Still, work in progress to simulate all paradigms from one file. For now, running each paradigm in 02_conditioning or 03_extinction should be enough to get the graphs.
-Also, the plots are already saved in each folder.
+2. Install the required dependencies:
+   ```bash
+    pip install -r requirements.txt
+   ```
+
+### Running the Code
+1. Navigate to the relevant directory (e.g., 02_prediction_learning).
+2. Execute scripts to generate plots and simulate paradigms:
+   ```bash
+   python blocking.py
+   ```
+For Jupyter notebooks (e.g., learning_how_to_act_nb.ipynb), open and run them cell by cell.
+
+## Highlights
+1. Rescorla-Wagner Model: Demonstrates classical conditioning paradigms like Blocking and Secondary Conditioning.
+2. Temporal Difference Learning: Simulates dynamic value estimation for reward prediction.
+3. Successor Representation: Enhances reinforcement learning speed and adaptability with SR-based value functions.
+4. Actor-Critic Frameworks: Explores policy learning in complex environments.
 
 ## References
-   * Wilson, W. J. (2012). The Rescorla-Wagner Model, Simplified. Albion College. Disponible en:< http://webcache. googleusercontent. com/search.
-   * Rescorla, R.A., 1972. A theory of Pavlovian conditioning: Variations in the effectiveness of reinforcement and non-reinforcement. Classical conditioning, Current research and theory, 2, pp.64-69.
-   * Dayan, P., & Abbott, L. F. (2005). Theoretical neuroscience: computational and mathematical modeling of neural systems. MIT press.
+1. Rescorla, R.A. (1972). A theory of Pavlovian conditioning: Variations in the effectiveness of reinforcement and non-reinforcement.
+2. Dayan, P., & Abbott, L. F. (2005). Theoretical neuroscience: computational and mathematical modeling of neural systems.
+3. Sutton, R. S., & Barto, A. G. (2018). Reinforcement learning: An introduction.
