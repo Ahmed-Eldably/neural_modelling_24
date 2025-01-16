@@ -1,50 +1,64 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
-Error_Angles= [-1.5947643388802428, -1.549672708629533, -1.5122426467891759, -1.5410038199669729, -1.628359781236272, -1.6025877321493731, -1.6632472568566357, -1.600392945107658, -1.5843090178082249, -1.5501806911692928, -1.5397718017906263, -1.5327524078489327, -1.567250242367858, -1.5779136443361064, -1.5241013227515663, -1.6291492486460382, -1.5877438566013016, -1.53402361319202, -1.506260221635512, -1.6450642396876365, -1.657395911482595, -1.5983755391946375, -1.6182183735424303, -1.4540655825880293, -1.561479826166593, -1.6012746907359425, -1.5987610627647622, -1.624079178354589, -1.641192630101133, -1.506260221635512, -1.6266388292750666, -1.583910329072372, -1.704325375886768, -1.5776455347588316, -1.5874614505088374, -1.6044536455304181, -1.587188301102902, -1.70094649149477, -1.6373644905707205, -1.5407753189377278, -1.5431217332284566, -1.5673120203377553, -1.662312133900749, -1.5542961742095116, -1.56754958495652, -1.5610246508543706, -1.592874757593385, -1.5348221361837615, -1.0168438181538688, -1.1379700536551518, -0.1141512670528072, -0.8501843272775337, 1.6158109425694236, 1.5769124584826435, -1.4219063791853994, -1.359064831565609, -1.2528722843342137, -1.2490457723982544, 1.6716435291234266, 1.5204410531998902, 1.958089930000973, 1.8185741428629678, 1.6167409826030164, 1.7652264917125589, 1.8377714416187976, -1.1220729827841756, -1.456912153752832, -1.5995240535411261, -1.5707963267948966, -1.4559197213779975, -1.683947308385381, -1.6793423618020846, -1.5950970977960017, -1.618836259642659, -1.5464955557937914, -1.4987898872865322, -1.5778137554628107, -1.5956139254125703, -1.5987610627647622, -1.6261031877347956, -1.6262948320406134, -1.5223912608557462, -1.581322253826622, -1.5739608731932504, -1.5707963267948966, -1.5464955557937914, -1.6634787480768787, -1.5430256902014756, -1.6025877321493731, -1.5707963267948966, -1.5359672114103664, -1.5154894658549976, -1.670146609350938, -1.5228105930202769, -1.5639471188309615, -1.5194715783792652, -1.5707963267948966, -1.6081938486139222, -1.6049127770508242, -1.556662992301629, -1.5610563750652202, -1.5742445889896994, -1.5495229407708355, -1.5235342507942045, -1.603252458023916, -1.6631256615264955, -1.6059256389660863, -1.6183794300718801, -1.495792780277819, -1.6046816566990143, -1.6443179586542669, -1.6075895309413846, -1.492012365805753, -1.5779136443361064, -1.5811052399411398, -1.649899216173801, -1.5573743140548055, -1.5581387749608446, -1.6002959633944027, -1.5616222722497866, -1.5248164869744067, -1.5465586499301593, -1.6265636853746384, -1.667788326149438, -1.6306616165110197, -1.5707963267948966, -1.630465669353945, -1.632406566116044, -1.6408036839703408, -1.5739912041034718, -1.6094675143661088, -1.5707963267948966, -1.6154095618411994, -1.8709674976250086, -1.6235526085669327]
+## TASK 2, CALCULATE, PLOT AND SAVE (e.g. export as .csv) ERRORS from error_angles
+df = pd.read_csv('error_angles_random_increased_target_radius.csv')
 
 
-# Segmenting experimental phases
-unperturbed_ranges = [range(0, 40), range(80, 120), range(160, 200)]
-gradual_range = range(40, 80)
-sudden_range = range(120, 160)
-
-# Combine unperturbed errors from all ranges
 unperturbed_errors = []
-for r in unperturbed_ranges:
-    unperturbed_errors.extend(Error_Angles[r.start:r.stop])
 
-gradual_errors = Error_Angles[gradual_range.start:gradual_range.stop]
-sudden_errors = Error_Angles[sudden_range.start:sudden_range.stop]
+error_angles_masked = np.ma.masked_invalid(df['error_angles'])
 
+
+
+
+unperturbed_errors.extend(error_angles_masked[0:40])
+gradual_errors = error_angles_masked[40:60]
+sudden_errors = error_angles_masked[120:160]
+unperturbed_errors.extend(error_angles_masked[80:120])
+unperturbed_errors.extend(error_angles_masked[160:200])
+
+
+x_axis_data = np.arange(0, len(error_angles_masked), 1)
 
 # Plot error angles with highlighted experimental segments
 plt.figure(figsize=(10, 6))
-plt.plot(Error_Angles,
-         label='Error Angle',
-         color='black')
+plt.plot(
+    error_angles_masked,
+    label='Error Angle',
+    color='blue',
+    linestyle='--',
+    marker='o',
+    markersize=5
+)
 
 # Highlight phases
-for i, r in enumerate(unperturbed_ranges):
-    plt.axvspan(r.start, r.stop, color='green', alpha=0.2, label='Unperturbed Phase' if i == 0 else None)
-plt.axvspan(gradual_range.start, gradual_range.stop, color='blue', alpha=0.2, label='Gradual Perturbation')
-plt.axvspan(sudden_range.start, sudden_range.stop, color='red', alpha=0.2, label='Sudden Perturbation')
+plt.axvspan(0, 40, color='grey', alpha=0.2, label='No Perturbation')
+plt.axvspan(40, 80, color='red', alpha=0.2, label='Gradual Perturbation')
+plt.axvspan(80, 120, color='grey', alpha=0.2, label='No Perturbation')
+plt.axvspan(120, 160, color='blue', alpha=0.2, label='Sudden Perturbation')
+plt.axvspan(160, 200, color='grey', alpha=0.2, label='No Pertubation')
 
 # Add labels, title, and legend
 plt.title("Error Angles Over Trials")
 plt.xlabel("Trial Number")
-plt.ylabel("Error Angle (radians)")
+plt.ylabel("Error Angle (degrees)")
 plt.legend()
 plt.show()
-
 
 # Calculate mean error angle
 unperturbed_mean = np.mean(unperturbed_errors)
 
-# Calculate motor variability as Error Variance
-unperturbed_mv = np.mean([(error - unperturbed_mean) ** 2 for error in unperturbed_errors])
 
 
-# Print results
-print(f"Unperturbed Phase - Mean Error Angle: {unperturbed_mean:.4f}")
-print(f"Unperturbed Phase - Motor Variability (MV): {unperturbed_mv:.4f}")
+unperturbed_segment_1 = df["error_angles"][0:40].to_numpy()
+unperturbed_segment_2 = df["error_angles"][80:120].to_numpy()
+unperturbed_segment_3 = df["error_angles"][160:200].to_numpy()
+
+unperturbed_segments = [unperturbed_segment_1, unperturbed_segment_2, unperturbed_segment_3]
+
+# Calculate motor variability (MV) as Error Variance
+for idx, segment  in enumerate(unperturbed_segments):
+    unperturbed_mv = np.nanvar(segment)
+    print(f"Unperturbed Phase - Motor Variability (MV) for segment {idx}: {unperturbed_mv:.4f}")

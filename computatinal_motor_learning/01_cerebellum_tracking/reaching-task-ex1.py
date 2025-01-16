@@ -1,9 +1,11 @@
+import pandas as pd
 import pygame
 import sys
 import random
 import math
 import numpy as np
 import matplotlib.pyplot as plt
+from pygame.draw import circle
 
 # Game parameters
 SCREEN_X, SCREEN_Y = 3840, 2160 # your screen resolution
@@ -45,10 +47,11 @@ move_faster = False
 clock = pygame.time.Clock()
 
 # Initialize game modes
-mask_mode= True
+mask_mode= False
 target_mode = 'fix'  # Mode for angular shift of target: random, fix, dynamic
-perturbation_mode= False
+perturbation_mode= True
 perturbation_type= 'gradual' # Mode for angular shift of controll: random, gradual or sudden
+prev_gradual_attempts = 0
 perturbation_angle = math.radians(PERTURBATION_ANGLE)  # Angle between mouse_pos and circle_pos
 perturbed_mouse_angle = 0
 gradual_step = 0
@@ -72,7 +75,7 @@ def generate_target_position():
     new_target_y = HEIGHT // 2 + TARGET_RADIUS * -math.cos(angle) # zero-angle at the top
     return [new_target_x, new_target_y]
 
-# Function to check if the current target is reached
+# Function to check if the current target is reached0
 def check_target_reached():
     if new_target:
         distance = math.hypot(circle_pos[0] - new_target[0], circle_pos[1] - new_target[1])
@@ -86,9 +89,35 @@ def at_start_position_and_generate_target(mouse_pos):
         return True
     return False
 
-def calculate_error_angle():
-    return math.atan2(mouse_pos[1] - START_POSITION[1],
-                      mouse_pos[0] - START_POSITION[0])
+def compute_error_angle(start_position,
+                        target,
+                        circle_pos):
+    s = np.array(start_position)
+    t = np.array(target)
+    c = np.array(circle_pos)
+
+    A = t - s
+    B = c - s
+    dot_product = np.dot(A, B)
+    magnitude_A = np.linalg.norm(A)
+    magnitude_B = np.linalg.norm(B)
+    # Compute the cosine of the angle
+    cos_theta = dot_product / (magnitude_A * magnitude_B)
+
+    # Compute the angle in radians and degrees
+    angle_radians = np.arccos(cos_theta)
+    angle_degrees = np.degrees(angle_radians)
+    # Equivalent to A_x * B_y - A_y * B_x
+    det = A[0] * B[1] - A[1] * B[0]
+
+    # Compute the signed angle using atan2(det, dot_product)
+    signed_angle_radians = np.arctan2(det, dot_product)
+    signed_angle_degrees = np.degrees(signed_angle_radians)
+
+    assert np.isclose(angle_degrees, np.abs(signed_angle_degrees)), "The angle in degrees should equal the magnitude of the signed angle."
+    # assuming clock wise error is negative.
+    return signed_angle_degrees
+
 
 # Main game loop
 running = True
@@ -150,19 +179,25 @@ while running:
             assert len(perturbed_mouse_pos) == 2
         elif perturbation_type == 'gradual':   
             #gradual counterclockwise perturbation of perturbation_angle in 10 steps, with perturbation_angle/10, each step lasts 3 attempts
-            gradual_step =  perturbation_angle / 10
-            step_attempts = 3
-            current_step = gradual_attempts // step_attempts
+            delta_angle =  perturbation_angle / 10
 
-            if current_step <= 10:
-                perturbed_mouse_angle = mouse_angle - perturbation_angle * current_step
+            perturbed_mouse_angle = mouse_angle - gradual_step * (perturbation_angle / 10)
 
-            else:
-                perturbed_mouse_angle = mouse_angle
+            # Each step lasts 3 attempts, We increase gradual_step only if gradual_attempts has changed.
+            if gradual_attempts % 3 == 0 and not prev_gradual_attempts == gradual_attempts:  # Attempts then increase it.
+                gradual_step += 1
+
+            if gradual_step >= 10:
+                # Resets after 10 steps for cyclic perturbation
+                gradual_attempts = 0
+
+
             perturbed_mouse_pos = [
                 START_POSITION[0] + distance * math.cos(perturbed_mouse_angle),
                 START_POSITION[1] + distance * math.sin(perturbed_mouse_angle)
             ]
+
+
 
         circle_pos = perturbed_mouse_pos
     else:
@@ -175,7 +210,9 @@ while running:
         attempts += 1
 
         # CALCULATE AND SAVE ERRORS between target and circle end position for a hit
-        error_angle = calculate_error_angle()
+        error_angle = compute_error_angle(start_position=START_POSITION,
+                                          target=new_target,
+                                          circle_pos=circle_pos)
         error_angles.append(error_angle)
 
         new_target = None  # Set target to None to indicate hit
@@ -188,7 +225,9 @@ while running:
         attempts += 1
 
         # CALCULATE AND SAVE ERRORS between target and circle end position for a miss
-        error_angle = calculate_error_angle()
+        error_angle = compute_error_angle(start_position=START_POSITION,
+                                          target=new_target,
+                                          circle_pos=circle_pos)
         error_angles.append(error_angle)
 
         new_target = None  # Set target to None to indicate miss
@@ -215,6 +254,11 @@ while running:
         text = font.render('MOVE FASTER!', True, RED)
         text_rect = text.get_rect(center=(START_POSITION))
         screen.blit(text, text_rect)
+        # Exclude attempts
+        if len(error_angles) > 0:
+            error_angles.pop() # Remove the most recent one
+            error_angles.append(np.nan)
+
 
 # Generate playing field
     # Draw current target
@@ -257,50 +301,60 @@ while running:
 pygame.quit()
 
 ## TASK 2, CALCULATE, PLOT AND SAVE (e.g. export as .csv) ERRORS from error_angles
-valid_error_angles = [error_angle for error_angle in error_angles if not math.isnan(error_angle)]
+df = pd.DataFrame(error_angles, columns=['error_angles'])
+df.to_csv('error_angles_random_increased_target_radius.csv', index=False)
 
 
-# Segmenting experimental phases
-unperturbed_ranges = [range(0, 40), range(80, 120), range(160, 200)]
-sudden_range = range(120, 160)
-gradual_range = range(40, 120)
+df = pd.read_csv('error_angles_random_increased_target_radius.csv')
 
 unperturbed_errors = []
-for r in unperturbed_ranges:
-    unperturbed_errors.extend(valid_error_angles[r.start:r.stop])
 
-sudden_errors = valid_error_angles[sudden_range.start:sudden_range.stop]
-gradual_errors = valid_error_angles[gradual_range.start:gradual_range.stop]
+error_angles_masked = np.ma.masked_invalid(df['error_angles'])
+
+
+unperturbed_errors.extend(error_angles_masked[0:40])
+gradual_errors = error_angles_masked[40:60]
+sudden_errors = error_angles_masked[120:160]
+unperturbed_errors.extend(error_angles_masked[80:120])
+unperturbed_errors.extend(error_angles_masked[160:200])
+
+x_axis_data = np.arange(0, len(error_angles_masked), 1)
 
 # Plot error angles with highlighted experimental segments
 plt.figure(figsize=(10, 6))
-plt.plot(valid_error_angles,
-         label='Error Angle',
-         color='black')
+plt.plot(
+    error_angles_masked,
+    label='Error Angle',
+    color='blue',
+    linestyle='--',
+    marker='o',
+    markersize=5
+)
 
 # Highlight phases
-for i, r in enumerate(unperturbed_ranges):
-    plt.axvspan(r.start, r.stop, color='green', alpha=0.2, label='Unperturbed Phase' if i == 0 else None)
-plt.axvspan(gradual_range.start, gradual_range.stop, color='blue', alpha=0.2, label='Gradual Perturbation')
-plt.axvspan(sudden_range.start, sudden_range.stop, color='red', alpha=0.2, label='Sudden Perturbation')
+plt.axvspan(0, 40, color='grey', alpha=0.2, label='No Perturbation')
+plt.axvspan(40, 80, color='red', alpha=0.2, label='Gradual Perturbation')
+plt.axvspan(80, 120, color='grey', alpha=0.2, label='No Perturbation')
+plt.axvspan(120, 160, color='blue', alpha=0.2, label='Sudden Perturbation')
+plt.axvspan(160, 200, color='grey', alpha=0.2, label='No Pertubation')
 
 # Add labels, title, and legend
 plt.title("Error Angles Over Trials")
 plt.xlabel("Trial Number")
-plt.ylabel("Error Angle (radians)")
+plt.ylabel("Error Angle (degrees)")
 plt.legend()
 plt.show()
 
 # Calculate mean error angle
 unperturbed_mean = np.mean(unperturbed_errors)
 
+unperturbed_segment_1 = df["error_angles"][0:40].to_numpy()
+unperturbed_segment_2 = df["error_angles"][80:120].to_numpy()
+unperturbed_segment_3 = df["error_angles"][160:200].to_numpy()
+
+unperturbed_segments = [unperturbed_segment_1, unperturbed_segment_2, unperturbed_segment_3]
+
 # Calculate motor variability (MV) as Error Variance
-unperturbed_mv = np.mean([(error - unperturbed_mean)**2 for error in unperturbed_errors])
-
-
-# Print results
-print(f"Unperturbed Phase - Mean Error Angle: {unperturbed_mean:.4f}")
-print(f"Unperturbed Phase - Motor Variability (MV): {unperturbed_mv:.4f}")
-
-
-sys.exit()
+for idx, segment  in enumerate(unperturbed_segments):
+    unperturbed_mv = np.nanvar(segment)
+    print(f"Unperturbed Phase - Motor Variability (MV) for segment {idx}: {unperturbed_mv:.4f}")
