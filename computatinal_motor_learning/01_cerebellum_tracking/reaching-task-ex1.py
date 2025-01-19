@@ -333,10 +333,10 @@ plt.plot(
 
 # Highlight phases
 plt.axvspan(0, 40, color='grey', alpha=0.2, label='No Perturbation')
-plt.axvspan(40, 80, color='red', alpha=0.2, label='Gradual Perturbation')
-plt.axvspan(80, 120, color='grey', alpha=0.2, label='No Perturbation')
-plt.axvspan(120, 160, color='blue', alpha=0.2, label='Sudden Perturbation')
-plt.axvspan(160, 200, color='grey', alpha=0.2, label='No Pertubation')
+plt.axvspan(20, 60, color='blue', alpha=0.2, label='Sudden Perturbation')
+plt.axvspan(60, 80, color='grey', alpha=0.2, label='No Perturbation')
+plt.axvspan(80, 140, color='blue', alpha=0.2, label='Sudden Perturbation')
+plt.axvspan(140, 160, color='grey', alpha=0.2, label='No Perturbation')
 
 # Add labels, title, and legend
 plt.title("Error Angles Over Trials")
