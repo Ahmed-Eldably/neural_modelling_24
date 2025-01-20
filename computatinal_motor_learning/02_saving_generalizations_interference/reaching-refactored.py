@@ -37,32 +37,31 @@ class Participant:
     def get_next_session_number(self):
         """Determine the next session number for the participant to avoid overwriting."""
         session_number = 1
-        while os.path.exists(f'participant_{self.id}_session_{session_number}.csv'):
+        while os.path.exists(f'{self.id}/participant_{self.id}_session_{session_number}.csv'):
             session_number += 1
         return session_number
 
-    def log_trial(self, attempt, error_angle, reaction_time, movement_duration, hit):
+    def log_trial(self, attempt, error_angle, hit):
         """Store each trial's results."""
         self.trial_data.append({
             "Participant ID": self.id,
             "Session": self.session,
             "Attempt": attempt,
             "Error Angle": error_angle,
-            "Reaction Time (ms)": reaction_time,
-            "Movement Duration (ms)": movement_duration,
             "Hit": hit
         })
 
     def save_results(self):
         """Save participant's session data to CSV."""
         df = pd.DataFrame(self.trial_data)
-        filename = f'participant_{self.id}_session_{self.session}.csv'
+        filename = f'{self.id}/participant_{self.id}_session_{self.session}.csv'
         df.to_csv(filename, index=False)
         print(f"Data saved for Participant {self.id}, Session {self.session} in {filename}")
 
 # ========================== EXPERIMENT CLASS ==========================
 class MotorLearningExperiment:
     def __init__(self, participant):
+        self.error_angles = []
         pygame.init()
         self.screen = pygame.display.set_mode((Config.WIDTH, Config.HEIGHT), pygame.FULLSCREEN)
         pygame.display.set_caption("Reaching Game")
@@ -98,6 +97,19 @@ class MotorLearningExperiment:
             Config.WIDTH // 2 + Config.TARGET_RADIUS * math.sin(angle),
             Config.HEIGHT // 2 + Config.TARGET_RADIUS * -math.cos(angle)
         ]
+
+    def check_target_reached(self, circle_pos):
+        if self.new_target:
+            distance = math.hypot(circle_pos[0] - self.new_target[0],
+                                             circle_pos[1] - self.new_target[1])
+            return distance <= Config.CIRCLE_SIZE
+        return False
+
+    def at_start_position_and_generate_target(self, mouse_pos):
+        distance = math.hypot(mouse_pos[0] - Config.START_POSITION[0], mouse_pos[1] - Config.START_POSITION[1])
+        if distance <= Config.CIRCLE_SIZE:
+            return True
+        return False
 
     def compute_error_angle(self, start_position, target, circle_pos):
         """Compute angular error between start, target, and movement endpoint."""
@@ -196,24 +208,22 @@ class MotorLearningExperiment:
 
             # ========================== CHECK TARGET HIT OR MISS ==========================
             hit = False
-            reaction_time = pygame.time.get_ticks() - self.trial_start_time
-            movement_duration = pygame.time.get_ticks() - self.start_time
 
-            if self.new_target and math.hypot(circle_pos[0] - self.new_target[0],
-                                              circle_pos[1] - self.new_target[1]) <= Config.CIRCLE_SIZE:
+            if self.check_target_reached(circle_pos):
                 self.score += 1
                 self.attempts += 1
                 hit = True
 
                 error_angle = self.compute_error_angle(Config.START_POSITION, self.new_target, circle_pos)
                 if error_angle is not None:
-                    self.participant.log_trial(self.attempts, error_angle, reaction_time, movement_duration, hit)
+                    self.participant.log_trial(self.attempts, error_angle, hit)
 
                 self.new_target = None  # Reset target
                 self.start_time = 0  # Reset timer
                 if self.perturbation_type == 'gradual' and self.perturbation_mode:
                     self.gradual_attempts += 1
 
+            # miss if player leaves the target_radius + 1% tolerance
             elif self.new_target and math.hypot(circle_pos[0] - Config.START_POSITION[0],
                                                 circle_pos[1] - Config.START_POSITION[1]) > Config.TARGET_RADIUS * 1.01:
                 self.attempts += 1
@@ -221,7 +231,7 @@ class MotorLearningExperiment:
 
                 error_angle = self.compute_error_angle(Config.START_POSITION, self.new_target, circle_pos)
                 if error_angle is not None:
-                    self.participant.log_trial(self.attempts, error_angle, reaction_time, movement_duration, hit)
+                    self.participant.log_trial(self.attempts, error_angle, hit)
 
                 self.new_target = None  # Reset target
                 self.start_time = 0  # Reset timer
@@ -230,9 +240,9 @@ class MotorLearningExperiment:
                     self.gradual_attempts += 1
 
             # ========================== CHECK IF NEW TARGET IS NEEDED ==========================
-            if not self.new_target and math.hypot(mouse_pos[0] - Config.START_POSITION[0],
-                                                  mouse_pos[1] - Config.START_POSITION[1]) <= Config.CIRCLE_SIZE:
+            if not self.new_target and self.at_start_position_and_generate_target(mouse_pos):
                 self.new_target = self.generate_target_position()
+                self.move_faster = False
                 self.start_time = pygame.time.get_ticks()
 
             # ========================== TIME LIMIT CHECK ==========================
@@ -244,8 +254,12 @@ class MotorLearningExperiment:
             if self.move_faster:
                 font = pygame.font.Font(None, 36)
                 text = font.render('MOVE FASTER!', True, Config.RED)
-                text_rect = text.get_rect(center=(Config.START_POSITION))
+                text_rect = text.get_rect(center=Config.START_POSITION)
                 self.screen.blit(text, text_rect)
+                # Exclude attempts
+                if len(self.error_angles) > 0:
+                    self.error_angles.pop()  # Remove the most recent one
+                    self.error_angles.append(np.nan)
 
             # ========================== DRAW GAME ELEMENTS ==========================
             if self.new_target:
@@ -280,6 +294,9 @@ class MotorLearningExperiment:
 
 # ========================== RUN EXPERIMENT ==========================
 if __name__ == "__main__":
-    participant = Participant(participant_id=1, age=25, gender="M", handedness="Right")
+    participant = Participant(participant_id=1,
+                              age=25,
+                              gender="M",
+                              handedness="Right")
     experiment = MotorLearningExperiment(participant)
     experiment.run()
