@@ -37,7 +37,7 @@ class Participant:
     def get_next_session_number(self):
         """Determine the next session number for the participant to avoid overwriting."""
         session_number = 1
-        while os.path.exists(f'{self.id}/participant_{self.id}_session_{session_number}.csv'):
+        while os.path.exists(f'participant_data/{self.id}/participant_{self.id}_session_{session_number}.csv'):
             session_number += 1
         return session_number
 
@@ -54,9 +54,18 @@ class Participant:
     def save_results(self):
         """Save participant's session data to CSV."""
         df = pd.DataFrame(self.trial_data)
-        filename = f'{self.id}/participant_{self.id}_session_{self.session}.csv'
+
+        # Define directory and filename
+        directory = f'participant_data/{self.id}'
+        filename = f'{directory}/participant_{self.id}_session_{self.session}.csv'
+
+        # Ensure the directory exists
+        os.makedirs(directory, exist_ok=True)
+
+        # Save the file
         df.to_csv(filename, index=False)
         print(f"Data saved for Participant {self.id}, Session {self.session} in {filename}")
+
 
 # ========================== EXPERIMENT CLASS ==========================
 class MotorLearningExperiment:
@@ -81,6 +90,7 @@ class MotorLearningExperiment:
         # Experiment Settings
         self.target_mode = 'fix'  # 'random' or 'fix'
         self.show_mouse_info = False
+        self.mask_mode = True
 
         # Participant Data
         self.participant = participant
@@ -265,13 +275,23 @@ class MotorLearningExperiment:
             if self.new_target:
                 pygame.draw.circle(self.screen, Config.BLUE, self.new_target, Config.TARGET_SIZE // 2)
 
-            pygame.draw.circle(self.screen, Config.WHITE, circle_pos, Config.CIRCLE_SIZE // 2)
+            if self.mask_mode:
+                if distance < Config.MASK_RADIUS:
+                    pygame.draw.circle(self.screen, Config.WHITE, circle_pos, Config.CIRCLE_SIZE // 2)
+            else:
+                pygame.draw.circle(self.screen, Config.WHITE, circle_pos, Config.CIRCLE_SIZE // 2)
+
+            # Draw start position
             pygame.draw.circle(self.screen, Config.WHITE, Config.START_POSITION, 5)
+
 
             # ========================== DISPLAY SCORE & ATTEMPTS ==========================
             font = pygame.font.Font(None, 36)
             score_text = font.render(f"Score: {self.score}", True, Config.WHITE)
             self.screen.blit(score_text, (10, 10))
+
+            score_text = font.render(f"mask_mode: {self.mask_mode}", True, Config.WHITE)
+            self.screen.blit(score_text, (10, 40))
 
             attempts_text = font.render(f"Attempts: {self.attempts}", True, Config.WHITE)
             self.screen.blit(attempts_text, (10, 30))
