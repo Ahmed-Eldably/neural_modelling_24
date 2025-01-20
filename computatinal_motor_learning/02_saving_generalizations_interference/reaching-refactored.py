@@ -7,7 +7,8 @@ import os
 
 # ========================== EXPERIMENT CONFIGURATION ==========================
 class Config:
-    SCREEN_X, SCREEN_Y = 3840, 2160  # Screen resolution
+    SCREEN_X = int(os.getenv('SCREEN_X', 3840))  # Screen resolution X
+    SCREEN_Y = int(os.getenv('SCREEN_Y', 2160))  # Screen resolution Y
     WIDTH, HEIGHT = SCREEN_X // 1.5, SCREEN_Y // 1.5  # Adjust for scaling
     CIRCLE_SIZE = 20
     TARGET_SIZE = CIRCLE_SIZE
