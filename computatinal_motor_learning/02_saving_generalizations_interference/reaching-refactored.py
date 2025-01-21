@@ -14,7 +14,7 @@ class Config:
     TARGET_SIZE = CIRCLE_SIZE
     TARGET_RADIUS = 300
     MASK_RADIUS = 0.66 * TARGET_RADIUS
-    ATTEMPTS_LIMIT = 160
+    ATTEMPTS_LIMIT = 200
     TIME_LIMIT = 1000  # Time limit per attempt (ms)
 
     # Start Positions
@@ -48,7 +48,7 @@ class Participant:
             "Participant ID": self.id,
             "Session": self.session,
             "Attempt": attempt,
-            "Error Angle": error_angle,
+            "Error Angle": round(error_angle, 2),
             "Hit": hit
         })
 
@@ -108,6 +108,22 @@ class MotorLearningExperiment:
             Config.WIDTH // 2 + Config.TARGET_RADIUS * math.sin(angle),
             Config.HEIGHT // 2 + Config.TARGET_RADIUS * -math.cos(angle)
         ]
+
+    def update_experiment_design(self):
+        """Updates the perturbation mode and experiment state based on the current attempt."""
+        perturbation_changes = {
+            1: (False, None),  # Turn OFF perturbation
+            20: (True, "sudden"),  # Sudden perturbation ON
+            80: (False, None),  # Turn OFF perturbation
+            100: (False, None),  # Turn OFF perturbation
+            120: (True, "sudden"),  # Sudden perturbation ON
+            180: (False, None),  # Turn OFF perturbation
+            200: (False, None)  # Turn OFF perturbation
+        }
+
+        # Update perturbation mode if attempt matches the keys
+        if self.attempts in perturbation_changes:
+            self.perturbation_mode, self.perturbation_type = perturbation_changes[self.attempts]
 
     def check_target_reached(self, circle_pos):
         if self.new_target:
@@ -173,20 +189,14 @@ class MotorLearningExperiment:
                     elif event.key == pygame.K_h:
                         self.show_mouse_info = not self.show_mouse_info
 
-            # ========================== EXPERIMENT DESIGN ==========================
-            if self.attempts == 1:
-                self.perturbation_mode = False
-            elif self.attempts == 20:
-                self.perturbation_mode = True
-                self.perturbation_type = 'sudden'
-            elif self.attempts == 60:
-                self.perturbation_mode = False
-            elif self.attempts == 80:
-                self.perturbation_mode = True
-                self.perturbation_type = 'sudden'
-            elif self.attempts == 140:
-                self.perturbation_mode = False
-            elif self.attempts >= Config.ATTEMPTS_LIMIT:
+
+
+
+            # # ========================== EXPERIMENT DESIGN ==========================
+            self.update_experiment_design()
+
+            # Stop experiment when reaching attempt limit
+            if self.attempts > Config.ATTEMPTS_LIMIT:
                 running = False
 
             # Hide the mouse cursor
