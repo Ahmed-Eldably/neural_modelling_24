@@ -203,7 +203,7 @@ class MotorLearningExperiment:
             self.update_experiment_design()
 
             # Stop experiment when reaching attempt limit
-            if self.attempts > self.config.ATTEMPTS_LIMIT:
+            if self.attempts >= self.config.ATTEMPTS_LIMIT:
                 running = False
 
             # Hide the mouse cursor
@@ -338,7 +338,7 @@ if __name__ == "__main__":
 
     task_config = TaskConfig(args.experiment_name, args.phase)
 
-    participant = Participant(participant_id='AE',
+    participant = Participant(participant_id='EH',
                               age=23,
                               gender="F",
                               handedness="Right",
