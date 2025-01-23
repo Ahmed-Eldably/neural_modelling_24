@@ -338,7 +338,7 @@ if __name__ == "__main__":
 
     task_config = TaskConfig(args.experiment_name, args.phase)
 
-    participant = Participant(participant_id='AE',
+    participant = Participant(participant_id='EH',
                               age=23,
                               gender="F",
                               handedness="Right",
