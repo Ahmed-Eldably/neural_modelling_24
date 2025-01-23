@@ -227,9 +227,10 @@ class MotorLearningExperiment:
                     if self.gradual_step >= 10:
                         self.gradual_attempts = 0  # Reset after 10 steps for cyclic perturbation
 
+
                 circle_pos = [
-                    self.config.START_POSITION[0] + distance * math.cos(perturbed_mouse_angle),
-                    self.config.START_POSITION[1] + distance * math.sin(perturbed_mouse_angle)
+                    self.config.START_POSITION[0] + distance * math.cos(perturbed_mouse_angle + self.config.noise),
+                    self.config.START_POSITION[1] + distance * math.sin(perturbed_mouse_angle + self.config.noise)
                 ]
             else:
                 circle_pos = pygame.mouse.get_pos()
@@ -337,7 +338,7 @@ if __name__ == "__main__":
 
     task_config = TaskConfig(args.experiment_name, args.phase)
 
-    participant = Participant(participant_id='Ka',
+    participant = Participant(participant_id='AE',
                               age=23,
                               gender="F",
                               handedness="Right",

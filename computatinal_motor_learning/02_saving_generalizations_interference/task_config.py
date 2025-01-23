@@ -1,7 +1,6 @@
 import math
 import os
-
-
+import random
 
 
 class TaskConfig:
@@ -17,7 +16,9 @@ class TaskConfig:
 
     # Start Positions
     START_POSITION = (WIDTH // 2, HEIGHT // 2)
-    PERTURBATION_ANGLE = math.radians(30)  # Perturbation Angle in Radians
+    PERTURBATION_ANGLE = math.radians(30)   # Perturbation Angle in Radians
+
+    noise = 0
 
     # Colors
     WHITE, BLACK, RED, BLUE = (255, 255, 255), (0, 0, 0), (255, 0, 0), (0, 0, 255)
@@ -41,5 +42,20 @@ class TaskConfig:
             elif phase == 3:
                 TaskConfig.START_ANGLE = 125
 
+        elif experiment_name == "bonus":
+            if phase == 0:
+                TaskConfig.START_ANGLE = 35
+                NOISE_AMPLITUDE = 0.05  # Adjust this value for more/less noise
+
+                # Add sinusoidal noise to the angle
+                TaskConfig.noise = NOISE_AMPLITUDE * math.sin(random.uniform(0, 2 * math.pi))
+
+            elif phase == 1:
+                TaskConfig.START_ANGLE = 125
+                # Define a small noise amplitude
+                NOISE_AMPLITUDE = 0.05  # Adjust this value for more/less noise
+
+                # Add sinusoidal noise to the angle
+                TaskConfig.noise = NOISE_AMPLITUDE * math.sin(random.uniform(0, 2 * math.pi))
 
 
