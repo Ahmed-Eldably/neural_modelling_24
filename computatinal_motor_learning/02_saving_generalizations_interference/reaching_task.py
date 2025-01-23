@@ -203,7 +203,7 @@ class MotorLearningExperiment:
             self.update_experiment_design()
 
             # Stop experiment when reaching attempt limit
-            if self.attempts > self.config.ATTEMPTS_LIMIT:
+            if self.attempts >= self.config.ATTEMPTS_LIMIT:
                 running = False
 
             # Hide the mouse cursor
