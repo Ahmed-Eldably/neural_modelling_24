@@ -27,7 +27,7 @@ This repository contains implementations of key reinforcement learning and neura
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/aeldably/neural_modelling_24/tree/master
+   git clone https://github.com/aeldably/neural_modelling_24.git
    cd neural_modelling
    ```
 
