@@ -77,6 +77,7 @@ show_info=0
 trial_positions = []
 last_trajectory=[]
 
+
 # Font setup
 font = pygame.font.SysFont(None, 36)
 
@@ -129,7 +130,7 @@ def handle_mouse_input():
     global pint_pos, pint_velocity, launched, waiting_for_mouse
     mouse_pos = pygame.mouse.get_pos()
     distance = math.dist(mouse_pos, START_POS)
-    if waiting_for_mouse:    
+    if waiting_for_mouse:
         if distance <= pint_radius:  # Mouse touching the pint
             waiting_for_mouse = False
     elif distance <= FREE_ZONE_RADIUS:
@@ -155,7 +156,7 @@ def apply_friction():
 def update_perturbation():
     """Adjust the perturbation force based on gradual or sudden mode."""
     global perturbation_force, trial_in_block
-    
+
     if gradual_perturbation and perturbation_active:
         # Increment force every 3 trials (or however you want to adjust the frequency)
         if trial_in_block % 3 == 0 and trial_in_block != 0:
@@ -169,11 +170,16 @@ def apply_perturbation():
 
 # CHECK & SCORE
 def check_stopped():
-    global stopped, launched
+    global stopped, launched, last_trajectory
     if abs(pint_velocity[0]) < 0.1 and abs(pint_velocity[1]) < 0.1 and launched:
         stopped = True
         launched = False
-        
+        last_trajectory = trajectory[:]
+        if last_trajectory:
+            end_pos = last_trajectory[-1]  # Store the final position
+            print(f"Last trajectory saved: {last_trajectory}")
+            print(f" End position saved: {end_pos}")
+
 
 def point_in_polygon(point, polygon):
     """Check if a point is inside a polygon."""
@@ -210,13 +216,13 @@ def calculate_score():
         elif not TABLE_RECT.collidepoint(*pint_pos):
             score -= 50  # Penalty for missing
             display_message("Too far!")
-        
+
         # Append trial position and current block number
         trial_positions.append((pint_pos[0], pint_pos[1], current_block))
         reset_pint()
         handle_trial_end()
-        
-        
+
+
 
 def calculate_edge_score(distance, max_distance):
     """
@@ -240,13 +246,36 @@ def reset_pint():
     launched = False
     stopped = False
     waiting_for_mouse = True
-    last_trajectory=[]
+    trajectory.clear()
+
+
+def draw_point(position, flag=False):
+    if not flag:
+        pygame.draw.circle(screen, YELLOW, (int(position[0]), int(position[1])), pint_radius)
+    pygame.draw.circle(screen, WHITE, (int(position[0]), int(position[1])), pint_radius + 2, 2)
 
 
 #TASK 1: IMPLEMENT FEEDBACK MODES
 
-def draw_feedback():
+def draw_feedback(feedback_type, last_trajectory):
     """Display feedback based on the feedback type."""
+    print("Feedback type: {}".format(feedback_type))
+    print("Last trajectory: {}".format(last_trajectory))
+    if feedback_type == "trajectory":
+        for point_pos in last_trajectory:
+            draw_point(position=point_pos)
+    elif feedback_type == "endpos":
+        if len(last_trajectory) > 0:
+            last_pos = last_trajectory[-1]
+            draw_point(position=last_pos, flag=True)
+    elif feedback_type == "rl":
+        # Draw free movement zone
+        if point_in_polygon(pint_pos, GREEN_TRIANGLE):
+            pygame.draw.circle(screen, DARK_GREEN, START_POS, FREE_ZONE_RADIUS, 5)
+        else:
+            pygame.draw.circle(screen, DARK_RED, START_POS, FREE_ZONE_RADIUS, 5)
+
+
 
 # Precompute gradient surfaces
 green_gradient = create_gradient_surface(GREEN_TRIANGLE, DARK_GREEN, LIGHT_GREEN, SCORING_RECT.topleft)
@@ -257,7 +286,7 @@ red_gradient = create_gradient_surface(RED_TRIANGLE, DARK_RED, LIGHT_RED, SCORIN
 def setup_block(block_number):
     """Set up block parameters."""
     global perturbation_active, feedback_mode, feedback_type, perturbation_force, trial_in_block, gradual_perturbation
-    
+
     block = block_structure[block_number - 1]
     feedback_type = block['feedback'] if block['feedback'] else None
     feedback_mode = feedback_type is not None
@@ -295,17 +324,27 @@ def handle_trial_end():
 # TASK1: Define the experiment blocks
 block_structure = [
     #Normal visual feedback
-    {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
-    {'feedback': None, 'perturbation': True, 'gradual': True, 'num_trials': 30, 'initial_force': 0.2, 'sudden_force': 2.0},  # 30 trials with gradual perturbation
-    {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
-    
+    # {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
+    # {'feedback': None, 'perturbation': True, 'gradual': True, 'num_trials': 30, 'initial_force': 0.2, 'sudden_force': 2.0},  # 30 trials with gradual perturbation
+    # {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
+
     # ADD Trajectory feedback
-
-    # ADD End position feedback
-
-    # ADD RL feedback
+    # {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
+    # {'feedback': 'trajectory', 'perturbation': True, 'gradual': True, 'num_trials': 30, 'initial_force': 0.2, 'sudden_force': 2.0},  # 30 trials with gradual perturbation
+    # {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
+    # # ADD End position feedback
+    # {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
+    # {'feedback': 'endpos', 'perturbation': True, 'gradual': True, 'num_trials': 30, 'initial_force': 0.2, 'sudden_force': 2.0},  # 30 trials with gradual perturbation
+    # {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
+    # # ADD RL feedback
+    # {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
+    {'feedback': 'rl', 'perturbation': True, 'gradual': True, 'num_trials': 30, 'initial_force': 0.2, 'sudden_force': 2.0},  # 30 trials with gradual perturbation
+    # {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
 
 ]
+
+mask_pint = launched and feedback_mode and feedback_type in ('trajectory', 'rl', 'endpos')
+
 current_block = 1
 setup_block(current_block)
 
@@ -347,24 +386,30 @@ while running:
             elif event.key == pygame.K_0:
                 feedback_mode = False
             elif event.key == pygame.K_i:  # Press 'i' to toggle info display
-                show_info = not show_info    
+                show_info = not show_info
             elif event.key == pygame.K_SPACE:  # Start the next experimental block
                 current_block += 1
                 if current_block > len(block_structure):
                     running = False  # End the experiment
                 else:
                     setup_block(current_block)
-    if not launched:
-        handle_mouse_input()
-    else:
+
+    if launched:
         pint_pos[0] += pint_velocity[0]
         pint_pos[1] += pint_velocity[1]
+        trajectory.append((int(pint_pos[0]), int(pint_pos[1])))
         apply_friction()
         check_stopped()
         calculate_score()
+    else:
+        handle_mouse_input()
+
 
     # Draw feedback if applicable
-    # draw_feedback()
+    draw_feedback(feedback_type=feedback_type, last_trajectory=last_trajectory)
+
+    if stopped:
+        reset_pint()
 
     if show_info:
         fb_info_text = font.render(f"Feedback: {feedback_type}", True, BLACK)
@@ -374,7 +419,7 @@ while running:
         screen.blit(fb_info_text, (10, 60))
         screen.blit(pt_info_text, (10, 90))
         screen.blit(pf_info_text, (10, 120))
-        screen.blit(tib_text, (10, 150))    
+        screen.blit(tib_text, (10, 150))
 
     pygame.display.flip()
     clock.tick(60)
@@ -390,4 +435,3 @@ feedback_blocks = {
     None: [1, 2, 3]  # Normal feedback type
 }
 #use trial_positions
-   
