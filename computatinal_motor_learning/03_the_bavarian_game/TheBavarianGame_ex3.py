@@ -255,10 +255,10 @@ def reset_pint():
     trajectory.clear()
 
 
-def draw_point(position, flag=False):
+def draw_point(position, radius=pint_radius, flag=False):
     if not flag:
-        pygame.draw.circle(screen, YELLOW, (int(position[0]), int(position[1])), pint_radius)
-    pygame.draw.circle(screen, WHITE, (int(position[0]), int(position[1])), pint_radius + 2, 2)
+        pygame.draw.circle(screen, YELLOW, (int(position[0]), int(position[1])), radius)
+    pygame.draw.circle(screen, WHITE, (int(position[0]), int(position[1])), radius + 2, 2)
 
 
 #TASK 1: IMPLEMENT FEEDBACK MODES
@@ -274,6 +274,10 @@ def draw_feedback(feedback_type, last_trajectory):
         if len(last_trajectory) > 0:
             last_pos = last_trajectory[-1]
             draw_point(position=last_pos, flag=True)
+    elif feedback_type == "endpos_approx":
+            last_pos = last_trajectory[-1]
+            scaling_factor=5
+            draw_point(position=last_pos, radius=pint_radius*scaling_factor, flag=True)
     elif feedback_type == "rl":
         # Draw free movement zone
         if point_in_polygon(pint_pos, GREEN_TRIANGLE):
@@ -329,6 +333,11 @@ def handle_trial_end():
 
 # TASK1: Define the experiment blocks
 block_structure = [
+   # ADD End Position Approximate  
+    {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
+    {'feedback': 'endpos_approx', 'perturbation': True, 'gradual': True, 'num_trials': 30, 'initial_force': 0.2, 'sudden_force': 2.0},  # 30 trials with gradual perturbation
+    {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
+ 
     #Normal visual feedback
     {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
     {'feedback': None, 'perturbation': True, 'gradual': True, 'num_trials': 30, 'initial_force': 0.2, 'sudden_force': 2.0},  # 30 trials with gradual perturbation
@@ -346,10 +355,10 @@ block_structure = [
     {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
     {'feedback': 'rl', 'perturbation': True, 'gradual': True, 'num_trials': 30, 'initial_force': 0.2, 'sudden_force': 2.0},  # 30 trials with gradual perturbation
     {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
-
+    
 ]
 
-mask_pint = launched and feedback_mode and feedback_type in ('trajectory', 'rl', 'endpos')
+mask_pint = launched and feedback_mode and feedback_type in ('trajectory', 'rl', 'endpos', 'endpos_approx')
 
 current_block = 1
 setup_block(current_block)
@@ -359,13 +368,13 @@ clock = pygame.time.Clock()
 running = True
 while running:
 # Determine if the beer pint should be masked
-    mask_pint = launched and feedback_mode and feedback_type in ('trajectory', 'rl', 'endpos')
+    mask_pint = launched and feedback_mode and feedback_type in ('trajectory', 'rl', 'endpos', 'endpos_approx')
 
     # Draw playfield with optional masking
     draw_playfield(mask_pint=mask_pint)
 
     # Display score (only for feedbacks where score is not relevant)
-    if feedback_type not in ('rl', 'endpos', 'trajectory'):
+    if feedback_type not in ('rl', 'endpos', 'trajectory', 'endpos_approx'):
         score_text = font.render(f"Score: {score}", True, BLACK)
         screen.blit(score_text, (10, 10))
 
@@ -437,6 +446,7 @@ feedback_blocks = {
     'trajectory': [4, 5, 6],
     'endpos': [7, 8, 9],
     'rl': [10, 11, 12],
+    'endpos_approx': [13, 14, 15],
     None: [1, 2, 3]  # Normal feedback type
 }
 #use trial_positions
