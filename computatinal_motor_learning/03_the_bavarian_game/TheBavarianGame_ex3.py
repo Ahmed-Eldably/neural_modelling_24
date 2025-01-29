@@ -79,7 +79,7 @@ perturbation_force=0
 force_increment=0.2
 end_pos = [0, 0]
 current_block = 1
-show_info=0
+show_info=1
 trial_positions = []
 last_trajectory=[]
 
@@ -349,10 +349,10 @@ block_structure = [
     {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
     {'feedback': 'rl', 'perturbation': True, 'gradual': True, 'num_trials': 30, 'initial_force': 0.2, 'sudden_force': 2.0},  # 30 trials with gradual perturbation
     {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
-   # ADD End Position Approximate  
-    {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
-    {'feedback': 'endpos_approx', 'perturbation': True, 'gradual': True, 'num_trials': 30, 'initial_force': 0.2, 'sudden_force': 2.0},  # 30 trials with gradual perturbation
-    {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
+   # # ADD End Position Approximate
+   #  {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
+   #  {'feedback': 'endpos_approx', 'perturbation': True, 'gradual': True, 'num_trials': 30, 'initial_force': 0.2, 'sudden_force': 2.0},  # 30 trials with gradual perturbation
+   #  {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
 ]
 
 mask_pint = launched and feedback_mode and feedback_type in ('trajectory', 'rl', 'endpos', 'endpos_approx')
@@ -428,10 +428,13 @@ while running:
         pt_info_text = font.render(f"Perturbation:{perturbation_active}", True, BLACK)
         pf_info_text = font.render(f"Perturbation_force:{perturbation_force}", True, BLACK)
         tib_text = font.render(f"Trial_in_block: {trial_in_block}", True, BLACK)
-        screen.blit(fb_info_text, (10, 60))
-        screen.blit(pt_info_text, (10, 90))
-        screen.blit(pf_info_text, (10, 120))
-        screen.blit(tib_text, (10, 150))
+        current_block_text = font.render(f"current_block: {current_block}", True, BLACK)
+
+        # screen.blit(fb_info_text, (10, 60))
+        screen.blit(pt_info_text, (10, 60))
+        screen.blit(pf_info_text, (10, 90))
+        screen.blit(tib_text, (10, 120))
+        screen.blit(current_block_text, (10, 150))
 
     pygame.display.flip()
     clock.tick(60)
@@ -455,7 +458,7 @@ timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
 directory_location = f"participant_data"
 directory = os.path.join(os.path.dirname(__file__), f'{directory_location}')
 filename = f'{directory}/participant_AE_{timestamp}'
-subject_id = f"participant_AE_{timestamp}"
+subject_id = f"AE"
 
 trial_positions_final_list = []
 for trial in trial_positions:
@@ -467,33 +470,6 @@ for trial in trial_positions:
 # Convert trial_positions to DataFrame and explicitly define column names
 df = pd.DataFrame(trial_positions_final_list, columns=['x', 'y', 'feedback_block', 'subject_id'])
 
-
-# Define the parameters to save
-table_config = {
-    "TABLE_RECT": {
-        "x": (SCREEN_WIDTH - TABLE_WIDTH) // 2,
-        "y": (SCREEN_HEIGHT - TABLE_HEIGHT) // 2,
-        "width": TABLE_WIDTH,
-        "height": TABLE_HEIGHT
-    },
-    "GREEN_TRIANGLE": [
-        {"x": SCORING_RECT.topleft[0], "y": SCORING_RECT.topleft[1]},
-        {"x": SCORING_RECT.topright[0], "y": SCORING_RECT.topright[1]},
-        {"x": SCORING_RECT.bottomleft[0], "y": SCORING_RECT.bottomleft[1]}
-    ],
-    "RED_TRIANGLE": [
-        {"x": SCORING_RECT.bottomright[0], "y": SCORING_RECT.bottomright[1]},
-        {"x": SCORING_RECT.bottomleft[0], "y": SCORING_RECT.bottomleft[1]},
-        {"x": SCORING_RECT.topright[0], "y": SCORING_RECT.topright[1]}
-    ]
-}
-
-# Define file path
-json_file_path = os.path.join("participant_data", "table_config.json")
-
-# Save parameters to a JSON file
-with open(json_file_path, "w") as json_file:
-    json.dump(table_config, json_file, indent=4)
 
 
 
