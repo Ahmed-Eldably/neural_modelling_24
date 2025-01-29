@@ -135,7 +135,44 @@ for fb_type in feedback_blocks.keys():
     # plt.imshow(gradient_image_red,
     #            extent=[scoring_left, scoring_left + scoring_width, scoring_top, scoring_top + scoring_height // 2],
     #            aspect='auto')
+# Create plot
+plt.figure(figsize=(12, 2))
 
+# Generate separate plots for each feedback type
+for fb_type in feedback_blocks.keys():
+    plt.figure(figsize=(12, 3))
+
+    # Filter trials for the current feedback type
+    trials = df[df['feedback_block'].map(feedback_mapping) == fb_type]
+
+    grouped_feedback_block = trials.groupby('feedback_block')[['x', 'y']]
+
+    print(grouped_feedback_block)
+
+    # Plot each trial position
+    if not trials.empty:
+        plt.scatter(trials['x'], trials['y'], label=fb_type, color=feedback_colors[fb_type], alpha=0.6)
+
+    # Generate gradient background for scoring area
+    gradient_image = generate_gradient_image(board_config, dark_green, light_green)
+    gradient_image_red = generate_gradient_image(board_config, dark_red, light_red)
+
+# Draw scoring area boundary
+    plt.gca().add_patch(plt.Rectangle(
+        (scoring_left, scoring_top),
+        scoring_width, scoring_height,
+        fill=False, edgecolor='brown', linewidth=3
+    ))
+
+    plt.xlabel("X Position")
+    plt.ylabel("Y Position")
+    plt.title(f"Trial Positions for Feedback Type: {fb_type}")
+    plt.legend(title="Feedback Type")
+    plt.gca().invert_yaxis()  # Match pygame coordinates
+    plt.grid(True)
+
+    # Show the plot for the current feedback type
+    plt.show()
     # Draw scoring area boundary
     plt.gca().add_patch(plt.Rectangle(
         (scoring_left, scoring_top),

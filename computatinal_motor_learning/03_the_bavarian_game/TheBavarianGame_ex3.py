@@ -448,19 +448,46 @@ timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
 directory_location = f"participant_data"
 directory = os.path.join(os.path.dirname(__file__), f'{directory_location}')
 filename = f'{directory}/participant_AE_{timestamp}'
+subject_id = f"participant_AE_{timestamp}"
+
+trial_positions_final_list = []
+for trial in trial_positions:
+    trial_list = list(trial)
+    trial_list.append(subject_id)
+    assert len(trial_list) == 4
+    trial_positions_final_list.append(trial_list)
+
 # Convert trial_positions to DataFrame and explicitly define column names
-df = pd.DataFrame(trial_positions, columns=['x', 'y', 'feedback_block'])
-board_config = {
-    "scoring_left": SCORING_RECT.left,
-    "scoring_top": SCORING_RECT.top,
-    "scoring_width": SCORING_RECT.width,
-    "scoring_height": SCORING_RECT.height
+df = pd.DataFrame(trial_positions_final_list, columns=['x', 'y', 'feedback_block', 'subject_id'])
+
+
+# Define the parameters to save
+table_config = {
+    "TABLE_RECT": {
+        "x": (SCREEN_WIDTH - TABLE_WIDTH) // 2,
+        "y": (SCREEN_HEIGHT - TABLE_HEIGHT) // 2,
+        "width": TABLE_WIDTH,
+        "height": TABLE_HEIGHT
+    },
+    "GREEN_TRIANGLE": [
+        {"x": SCORING_RECT.topleft[0], "y": SCORING_RECT.topleft[1]},
+        {"x": SCORING_RECT.topright[0], "y": SCORING_RECT.topright[1]},
+        {"x": SCORING_RECT.bottomleft[0], "y": SCORING_RECT.bottomleft[1]}
+    ],
+    "RED_TRIANGLE": [
+        {"x": SCORING_RECT.bottomright[0], "y": SCORING_RECT.bottomright[1]},
+        {"x": SCORING_RECT.bottomleft[0], "y": SCORING_RECT.bottomleft[1]},
+        {"x": SCORING_RECT.topright[0], "y": SCORING_RECT.topright[1]}
+    ]
 }
 
-json_file = os.path.join(os.path.dirname(__file__), f'{directory}/board_config.json')
-# Save the board configuration as a JSON file
-with open(json_file, "w") as fp:
-    json.dump(board_config, fp, indent=4)
+# Define file path
+json_file_path = os.path.join("participant_data", "table_config.json")
+
+# Save parameters to a JSON file
+with open(json_file_path, "w") as json_file:
+    json.dump(table_config, json_file, indent=4)
+
 
 
 # Save to CSV ensuring column headers are included
@@ -484,22 +511,4 @@ feedback_colors = {
 }
 
 # Plot hitting patterns
-plt.figure(figsize=(10, 6))
-for fb_type, trials in feedback_trials.items():
-    if trials:
-        xs, ys = zip(*trials)
-        plt.scatter(xs, ys, label=fb_type, color=feedback_colors[fb_type], alpha=0.6)
-
-# Draw scoring zone for reference
-plt.gca().add_patch(plt.Rectangle(
-    (SCORING_RECT.left, SCORING_RECT.top), SCORING_RECT.width, SCORING_RECT.height,
-    fill=False, edgecolor='black', linestyle='dashed', linewidth=2))
-
-plt.xlabel("X Position")
-plt.ylabel("Y Position")
-plt.title("Hitting Patterns by Feedback Type")
-plt.legend(title="Feedback Type")
-plt.gca().invert_yaxis()  # Match pygame coordinates
-plt.grid(True)
-plt.show()
 
