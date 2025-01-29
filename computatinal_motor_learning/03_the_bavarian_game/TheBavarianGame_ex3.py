@@ -333,16 +333,10 @@ def handle_trial_end():
 
 # TASK1: Define the experiment blocks
 block_structure = [
-   # ADD End Position Approximate  
-    {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
-    {'feedback': 'endpos_approx', 'perturbation': True, 'gradual': True, 'num_trials': 30, 'initial_force': 0.2, 'sudden_force': 2.0},  # 30 trials with gradual perturbation
-    {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
- 
     #Normal visual feedback
     {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
     {'feedback': None, 'perturbation': True, 'gradual': True, 'num_trials': 30, 'initial_force': 0.2, 'sudden_force': 2.0},  # 30 trials with gradual perturbation
     {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
-
     # ADD Trajectory feedback
     {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
     {'feedback': 'trajectory', 'perturbation': True, 'gradual': True, 'num_trials': 30, 'initial_force': 0.2, 'sudden_force': 2.0},  # 30 trials with gradual perturbation
@@ -355,7 +349,10 @@ block_structure = [
     {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
     {'feedback': 'rl', 'perturbation': True, 'gradual': True, 'num_trials': 30, 'initial_force': 0.2, 'sudden_force': 2.0},  # 30 trials with gradual perturbation
     {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
-    
+   # ADD End Position Approximate  
+    {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
+    {'feedback': 'endpos_approx', 'perturbation': True, 'gradual': True, 'num_trials': 30, 'initial_force': 0.2, 'sudden_force': 2.0},  # 30 trials with gradual perturbation
+    {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
 ]
 
 mask_pint = launched and feedback_mode and feedback_type in ('trajectory', 'rl', 'endpos', 'endpos_approx')
