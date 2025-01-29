@@ -1,6 +1,12 @@
+import datetime
+import os
+import time
+import json
+
 import pygame
 import math
 import matplotlib.pyplot as plt
+import pandas as pd
 
 # Initialize Pygame
 pygame.init()
@@ -324,22 +330,22 @@ def handle_trial_end():
 # TASK1: Define the experiment blocks
 block_structure = [
     #Normal visual feedback
-    # {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
-    # {'feedback': None, 'perturbation': True, 'gradual': True, 'num_trials': 30, 'initial_force': 0.2, 'sudden_force': 2.0},  # 30 trials with gradual perturbation
-    # {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
+    {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
+    {'feedback': None, 'perturbation': True, 'gradual': True, 'num_trials': 30, 'initial_force': 0.2, 'sudden_force': 2.0},  # 30 trials with gradual perturbation
+    {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
 
     # ADD Trajectory feedback
-    # {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
-    # {'feedback': 'trajectory', 'perturbation': True, 'gradual': True, 'num_trials': 30, 'initial_force': 0.2, 'sudden_force': 2.0},  # 30 trials with gradual perturbation
-    # {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
-    # # ADD End position feedback
-    # {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
-    # {'feedback': 'endpos', 'perturbation': True, 'gradual': True, 'num_trials': 30, 'initial_force': 0.2, 'sudden_force': 2.0},  # 30 trials with gradual perturbation
-    # {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
-    # # ADD RL feedback
-    # {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
+    {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
+    {'feedback': 'trajectory', 'perturbation': True, 'gradual': True, 'num_trials': 30, 'initial_force': 0.2, 'sudden_force': 2.0},  # 30 trials with gradual perturbation
+    {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
+    # ADD End position feedback
+    {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
+    {'feedback': 'endpos', 'perturbation': True, 'gradual': True, 'num_trials': 30, 'initial_force': 0.2, 'sudden_force': 2.0},  # 30 trials with gradual perturbation
+    {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
+    # ADD RL feedback
+    {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
     {'feedback': 'rl', 'perturbation': True, 'gradual': True, 'num_trials': 30, 'initial_force': 0.2, 'sudden_force': 2.0},  # 30 trials with gradual perturbation
-    # {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
+    {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
 
 ]
 
@@ -427,7 +433,6 @@ while running:
 pygame.quit()
 
 #TASK 2: PLOT Hitting patterns for all feedbacks
-# Plot results (hitting patterns on table + end score) grouped by feedback type
 feedback_blocks = {
     'trajectory': [4, 5, 6],
     'endpos': [7, 8, 9],
@@ -435,3 +440,66 @@ feedback_blocks = {
     None: [1, 2, 3]  # Normal feedback type
 }
 #use trial_positions
+# Separate trial positions by feedback type
+feedback_trials = {key: [] for key in feedback_blocks.keys()}
+
+
+timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+directory_location = f"participant_data"
+directory = os.path.join(os.path.dirname(__file__), f'{directory_location}')
+filename = f'{directory}/participant_AE_{timestamp}'
+# Convert trial_positions to DataFrame and explicitly define column names
+df = pd.DataFrame(trial_positions, columns=['x', 'y', 'feedback_block'])
+board_config = {
+    "scoring_left": SCORING_RECT.left,
+    "scoring_top": SCORING_RECT.top,
+    "scoring_width": SCORING_RECT.width,
+    "scoring_height": SCORING_RECT.height
+}
+
+json_file = os.path.join(os.path.dirname(__file__), f'{directory}/board_config.json')
+# Save the board configuration as a JSON file
+with open(json_file, "w") as fp:
+    json.dump(board_config, fp, indent=4)
+
+
+# Save to CSV ensuring column headers are included
+df.to_csv(f"{filename}.csv", index=False, header=True)
+
+# Plot results (hitting patterns on table + end score) grouped by feedback type
+
+
+for pos in trial_positions:
+    x, y, block = pos
+    for fb_type, blocks in feedback_blocks.items():
+        if block in blocks:
+            feedback_trials[fb_type].append((x, y))
+
+# Define colors for each feedback type
+feedback_colors = {
+    'trajectory': 'blue',
+    'endpos': 'red',
+    'rl': 'green',
+    None: 'black'
+}
+
+# Plot hitting patterns
+plt.figure(figsize=(10, 6))
+for fb_type, trials in feedback_trials.items():
+    if trials:
+        xs, ys = zip(*trials)
+        plt.scatter(xs, ys, label=fb_type, color=feedback_colors[fb_type], alpha=0.6)
+
+# Draw scoring zone for reference
+plt.gca().add_patch(plt.Rectangle(
+    (SCORING_RECT.left, SCORING_RECT.top), SCORING_RECT.width, SCORING_RECT.height,
+    fill=False, edgecolor='black', linestyle='dashed', linewidth=2))
+
+plt.xlabel("X Position")
+plt.ylabel("Y Position")
+plt.title("Hitting Patterns by Feedback Type")
+plt.legend(title="Feedback Type")
+plt.gca().invert_yaxis()  # Match pygame coordinates
+plt.grid(True)
+plt.show()
+
