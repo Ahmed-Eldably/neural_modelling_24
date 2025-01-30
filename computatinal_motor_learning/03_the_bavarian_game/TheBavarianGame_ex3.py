@@ -430,7 +430,7 @@ while running:
         tib_text = font.render(f"Trial_in_block: {trial_in_block}", True, BLACK)
         current_block_text = font.render(f"current_block: {current_block}", True, BLACK)
 
-        # screen.blit(fb_info_text, (10, 60))
+        screen.blit(fb_info_text, (10, 40))
         screen.blit(pt_info_text, (10, 60))
         screen.blit(pf_info_text, (10, 90))
         screen.blit(tib_text, (10, 120))
@@ -457,8 +457,8 @@ feedback_trials = {key: [] for key in feedback_blocks.keys()}
 timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
 directory_location = f"participant_data"
 directory = os.path.join(os.path.dirname(__file__), f'{directory_location}')
-filename = f'{directory}/participant_AE_{timestamp}'
-subject_id = f"AE_bonus"
+filename = f'{directory}/participant_AN_{timestamp}'
+subject_id = f"AN"
 
 trial_positions_final_list = []
 for trial in trial_positions:
