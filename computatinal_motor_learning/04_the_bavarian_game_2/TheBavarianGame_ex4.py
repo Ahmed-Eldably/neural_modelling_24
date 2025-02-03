@@ -322,6 +322,12 @@ def setup_block(block_number):
             gradual_perturbation = False
             perturbation_force = block.get('sudden_force', 10.0)  # Use the sudden force for sudden perturbation
 
+    if 'noise_level' in block:
+        noise_level = block['noise_level']
+    else:
+        noise_level = 0
+
+
 def handle_trial_end():
     """Handle end-of-trial events."""
     global trial_in_block, current_block, running
