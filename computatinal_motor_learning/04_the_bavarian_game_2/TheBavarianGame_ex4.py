@@ -83,6 +83,11 @@ current_block = 1
 show_info=1
 trial_positions = []
 last_trajectory=[]
+noise_mean = None
+noise_std = None
+noise_x = None
+noise_y = None
+pint_color = YELLOW
 
 
 # Font setup
@@ -106,16 +111,22 @@ def draw_playfield(mask_pint=False):
 
     # Optionally mask the beer pint
     if not mask_pint:
-        pygame.draw.circle(screen, YELLOW, (int(pint_pos[0]), int(pint_pos[1])), pint_radius)
+        pygame.draw.circle(screen, pint_color, (int(pint_pos[0]), int(pint_pos[1])), pint_radius)
         pygame.draw.circle(screen, WHITE, (int(pint_pos[0]), int(pint_pos[1])), pint_radius + 2, 2)
 
-def apply_motor_noise(noise_strength=0.2):
-    """Apply random noise as random fluctuations in movements"""
-    global pint_velocity
+def apply_motor_noise(mean=None, std_dev=None):
+    """Apply motor noise with specified mean and standard deviation."""
+    global pint_velocity, noise_x, noise_y
 
-    # Add random Gaussian noise to movement velocity
-    pint_velocity[0] += np.random.normal(0, noise_strength)
-    pint_velocity[1] += np.random.normal(0, noise_strength)
+    if mean is not None:
+        # Generate random noise from a Gaussian distribution
+        noise_x = np.random.normal(mean, std_dev)
+        noise_y = np.random.normal(mean, std_dev)
+
+        # Apply noise to the movement velocity
+        pint_velocity[0] += noise_x
+        pint_velocity[1] += noise_y
+
 
 
 # Precompute gradient surfaces
@@ -152,6 +163,8 @@ def handle_mouse_input():
         pint_pos[0], pint_pos[1] = mouse_pos
     else:
         pint_velocity = calculate_velocity(pint_pos, mouse_pos)
+        apply_motor_noise(mean=noise_mean,
+                          std_dev=noise_std)
         if perturbation_active:
             apply_perturbation()
         launched = True
@@ -304,7 +317,7 @@ red_gradient = create_gradient_surface(RED_TRIANGLE, DARK_RED, LIGHT_RED, SCORIN
 #Design Experiment
 def setup_block(block_number):
     """Set up block parameters."""
-    global perturbation_active, feedback_mode, feedback_type, perturbation_force, trial_in_block, gradual_perturbation
+    global perturbation_active, feedback_mode, feedback_type, perturbation_force, trial_in_block, gradual_perturbation, noise_mean, noise_std, friction, pint_color
 
     block = block_structure[block_number - 1]
     feedback_type = block['feedback'] if block['feedback'] else None
@@ -315,17 +328,24 @@ def setup_block(block_number):
 
     # Apply global perturbation mode to set gradual or sudden
     if perturbation_active:
-        if block['gradual']:  # Gradual perturbation
+        if not block['sudden']:  # Gradual perturbation
             gradual_perturbation = True
             perturbation_force = block.get('initial_force', 0)  # Use the initial force for gradual perturbation
         else:  # Sudden perturbation
             gradual_perturbation = False
             perturbation_force = block.get('sudden_force', 10.0)  # Use the sudden force for sudden perturbation
 
-    if 'noise_level' in block:
-        noise_level = block['noise_level']
+    noise_mean  = block['noise_mean'] if block['noise_mean'] else None
+    noise_std = block['noise_std'] if block['noise_std'] else None
+
+    if 'friction' in block:
+        friction = block['friction']
     else:
-        noise_level = 0
+        friction = BASE_FRICTION
+
+    if 'pint_color' in block:
+        pint_color = block['pint_color']
+
 
 
 def handle_trial_end():
@@ -349,25 +369,25 @@ def handle_trial_end():
 # TASK1: Define the experiment blocks
 block_structure = [
     #Normal visual feedback
-    {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
-    {'feedback': None, 'perturbation': True, 'gradual': True, 'num_trials': 30, 'initial_force': 0.2, 'sudden_force': 2.0},  # 30 trials with gradual perturbation
-    {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
+    {'feedback': 'endpos', 'perturbation': False, 'gradual': False, 'num_trials': 10, 'noise_mean': None, 'noise_std': None, 'pint_color': YELLOW},  # 10 trials without perturbation
+    {'feedback': 'endpos', 'perturbation': True, 'sudden': True, 'num_trials': 30, 'initial_force': 0.2, 'sudden_force': 2.0, 'noise_mean': None, 'noise_std': None, 'pint_color': YELLOW},  # 30 trials with gradual perturbation
+    {'feedback': 'endpos', 'perturbation': False, 'gradual': False, 'num_trials': 10, 'noise_mean': None, 'noise_std': None, 'pint_color': YELLOW},  # 10 trials without perturbation
     # ADD Trajectory feedback
-    {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
-    {'feedback': 'trajectory', 'perturbation': True, 'gradual': True, 'num_trials': 30, 'initial_force': 0.2, 'sudden_force': 2.0},  # 30 trials with gradual perturbation
-    {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
+    {'feedback': 'endpos', 'perturbation': False, 'gradual': False, 'num_trials': 10, 'noise_mean': 0.1, 'noise_std': 1.5, 'friction': BASE_FRICTION - 0.03, 'pint_color': (255, 255, 102)},  # 10 trials without perturbation
+    {'feedback': 'endpos', 'perturbation': True, 'sudden': True, 'num_trials': 30, 'initial_force': 0.2, 'sudden_force': 2.0, 'noise_mean': 0.1, 'noise_std': 1.5, 'friction': BASE_FRICTION - 0.03, 'pint_color': (255, 255, 102)},  # 30 trials with gradual perturbation
+    {'feedback': 'endpos', 'perturbation': False, 'gradual': False, 'num_trials': 10, 'noise_mean': 0.1, 'noise_std': 1.5, 'friction': BASE_FRICTION - 0.03, 'pint_color': (255, 255, 102)},  # 10 trials without perturbation
     # ADD End position feedback
-    {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
-    {'feedback': 'endpos', 'perturbation': True, 'gradual': True, 'num_trials': 30, 'initial_force': 0.2, 'sudden_force': 2.0},  # 30 trials with gradual perturbation
-    {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
+    {'feedback': 'endpos', 'perturbation': False, 'gradual': False, 'num_trials': 10, 'noise_mean': 2, 'noise_std': 3, 'friction': BASE_FRICTION - 0.02, 'pint_color': (255, 255, 179)},  # 10 trials without perturbation
+    {'feedback': 'endpos', 'perturbation': True, 'sudden': True, 'num_trials': 30, 'initial_force': 0.2, 'sudden_force': 2.0, 'noise_mean': 2, 'noise_std': 3, 'friction': BASE_FRICTION - 0.02, 'pint_color': (255, 255, 179)},  # 30 trials with gradual perturbation
+    {'feedback': 'endpos', 'perturbation': False, 'gradual': False, 'num_trials': 10, 'noise_mean': 2, 'noise_std': 3, 'friction': BASE_FRICTION - 0.02, 'pint_color': (255, 255, 179)},  # 10 trials without perturbation
     # ADD RL feedback
-    {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
-    {'feedback': 'rl', 'perturbation': True, 'gradual': True, 'num_trials': 30, 'initial_force': 0.2, 'sudden_force': 2.0},  # 30 trials with gradual perturbation
-    {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
-   # # ADD End Position Approximate
-    {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
-    {'feedback': 'endpos_approx', 'perturbation': True, 'gradual': True, 'num_trials': 30, 'initial_force': 0.2, 'sudden_force': 2.0},  # 30 trials with gradual perturbation
-    {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
+    {'feedback': 'endpos', 'perturbation': False, 'gradual': False, 'num_trials': 10, 'noise_mean': 4, 'noise_std': 6, 'friction': BASE_FRICTION - 0.03, 'pint_color': WHITE},  # 10 trials without perturbation
+    {'feedback': 'endpos', 'perturbation': True, 'sudden': True, 'num_trials': 30, 'initial_force': 0.2, 'sudden_force': 2.0, 'noise_mean': 4, 'noise_std': 6, 'friction': BASE_FRICTION - 0.03, 'pint_color': WHITE},  # 30 trials with gradual perturbation
+    {'feedback': 'endpos', 'perturbation': False, 'gradual': False, 'num_trials': 10, 'noise_mean': 4, 'noise_std': 6, 'friction': BASE_FRICTION - 0.03, 'pint_color': WHITE},  # 10 trials without perturbation
+   # # # ADD End Position Approximate
+   #  {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
+   #  {'feedback': 'endpos_approx', 'perturbation': True, 'gradual': True, 'num_trials': 30, 'initial_force': 0.2, 'sudden_force': 2.0},  # 30 trials with gradual perturbation
+   #  {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
 ]
 
 mask_pint = launched and feedback_mode and feedback_type in ('trajectory', 'rl', 'endpos', 'endpos_approx')
@@ -422,10 +442,10 @@ while running:
                     setup_block(current_block)
 
     if launched:
+        apply_friction()
         pint_pos[0] += pint_velocity[0]
         pint_pos[1] += pint_velocity[1]
         trajectory.append((int(pint_pos[0]), int(pint_pos[1])))
-        apply_friction()
         check_stopped()
         calculate_score()
     else:
@@ -444,12 +464,22 @@ while running:
         pf_info_text = font.render(f"Perturbation_force:{perturbation_force}", True, BLACK)
         tib_text = font.render(f"Trial_in_block: {trial_in_block}", True, BLACK)
         current_block_text = font.render(f"current_block: {current_block}", True, BLACK)
+        noise_x_y_text = font.render(f"noise_x, noise_y: {noise_x, noise_y}", True, BLACK)
+        noise_mean_std_text = font.render(f"noise_mean, noise_std: {noise_mean, noise_std}", True, BLACK)
+        friction_text = font.render(f"friction: {friction}", True, BLACK)
+        pint_velocity_text = font.render(f"pint_velocity: {pint_velocity}", True, BLACK)
+
 
         screen.blit(fb_info_text, (10, 40))
         screen.blit(pt_info_text, (10, 60))
         screen.blit(pf_info_text, (10, 90))
         screen.blit(tib_text, (10, 120))
         screen.blit(current_block_text, (10, 150))
+        screen.blit(noise_x_y_text, (10, 180))
+        screen.blit(noise_mean_std_text, (10, 210))
+        screen.blit(friction_text, (10, 240))
+        screen.blit(pint_velocity_text, (10, 270))
+
 
     pygame.display.flip()
     clock.tick(60)
@@ -487,9 +517,8 @@ df = pd.DataFrame(trial_positions_final_list, columns=['x', 'y', 'feedback_block
 
 
 
-
 # Save to CSV ensuring column headers are included
-df.to_csv(f"{filename}.csv", index=False, header=True)
+# df.to_csv(f"{filename}.csv", index=False, header=True)
 
 # Plot results (hitting patterns on table + end score) grouped by feedback type
 
