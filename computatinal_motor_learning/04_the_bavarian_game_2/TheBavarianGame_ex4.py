@@ -246,7 +246,7 @@ def calculate_score():
             display_message("Too far!")
 
         # Append trial position and current block number
-        trial_positions.append((pint_pos[0], pint_pos[1], current_block))
+        trial_positions.append((pint_pos[0], pint_pos[1], current_block, noise_x, noise_y, pint_velocity[0], pint_velocity[1], friction))
         reset_pint()
         handle_trial_end()
 
@@ -381,9 +381,9 @@ block_structure = [
     {'feedback': 'endpos', 'perturbation': True, 'sudden': True, 'num_trials': 30, 'initial_force': 0.2, 'sudden_force': 2.0, 'noise_mean': 2, 'noise_std': 3, 'friction': BASE_FRICTION - 0.02, 'pint_color': (255, 255, 179)},  # 30 trials with gradual perturbation
     {'feedback': 'endpos', 'perturbation': False, 'gradual': False, 'num_trials': 10, 'noise_mean': 2, 'noise_std': 3, 'friction': BASE_FRICTION - 0.02, 'pint_color': (255, 255, 179)},  # 10 trials without perturbation
     # ADD RL feedback
-    {'feedback': 'endpos', 'perturbation': False, 'gradual': False, 'num_trials': 10, 'noise_mean': 4, 'noise_std': 6, 'friction': BASE_FRICTION - 0.03, 'pint_color': WHITE},  # 10 trials without perturbation
-    {'feedback': 'endpos', 'perturbation': True, 'sudden': True, 'num_trials': 30, 'initial_force': 0.2, 'sudden_force': 2.0, 'noise_mean': 4, 'noise_std': 6, 'friction': BASE_FRICTION - 0.03, 'pint_color': WHITE},  # 30 trials with gradual perturbation
-    {'feedback': 'endpos', 'perturbation': False, 'gradual': False, 'num_trials': 10, 'noise_mean': 4, 'noise_std': 6, 'friction': BASE_FRICTION - 0.03, 'pint_color': WHITE},  # 10 trials without perturbation
+    {'feedback': 'endpos', 'perturbation': False, 'gradual': False, 'num_trials': 10, 'noise_mean': 4, 'noise_std': 6, 'friction': BASE_FRICTION - 0.01, 'pint_color': WHITE},  # 10 trials without perturbation
+    {'feedback': 'endpos', 'perturbation': True, 'sudden': True, 'num_trials': 30, 'initial_force': 0.2, 'sudden_force': 2.0, 'noise_mean': 4, 'noise_std': 6, 'friction': BASE_FRICTION - 0.01, 'pint_color': WHITE},  # 30 trials with gradual perturbation
+    {'feedback': 'endpos', 'perturbation': False, 'gradual': False, 'num_trials': 10, 'noise_mean': 4, 'noise_std': 6, 'friction': BASE_FRICTION - 0.01, 'pint_color': WHITE},  # 10 trials without perturbation
    # # # ADD End Position Approximate
    #  {'feedback': None, 'perturbation': False, 'gradual': False, 'num_trials': 10},  # 10 trials without perturbation
    #  {'feedback': 'endpos_approx', 'perturbation': True, 'gradual': True, 'num_trials': 30, 'initial_force': 0.2, 'sudden_force': 2.0},  # 30 trials with gradual perturbation
@@ -502,6 +502,10 @@ feedback_trials = {key: [] for key in feedback_blocks.keys()}
 timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
 directory_location = f"participant_data"
 directory = os.path.join(os.path.dirname(__file__), f'{directory_location}')
+
+if not os.path.exists(directory):
+    os.makedirs(directory)
+
 filename = f'{directory}/participant_AN_{timestamp}'
 subject_id = f"AN"
 
@@ -509,16 +513,13 @@ trial_positions_final_list = []
 for trial in trial_positions:
     trial_list = list(trial)
     trial_list.append(subject_id)
-    assert len(trial_list) == 4
     trial_positions_final_list.append(trial_list)
 
 # Convert trial_positions to DataFrame and explicitly define column names
-df = pd.DataFrame(trial_positions_final_list, columns=['x', 'y', 'feedback_block', 'subject_id'])
-
-
+df = pd.DataFrame(trial_positions_final_list, columns=['x', 'y', 'feedback_block', 'subject_id', 'noise_x', 'noise_y', 'pint_velocity_x', 'pint_velocity_y', 'friction'])
 
 # Save to CSV ensuring column headers are included
-# df.to_csv(f"{filename}.csv", index=False, header=True)
+df.to_csv(f"{filename}.csv", index=False, header=True)
 
 # Plot results (hitting patterns on table + end score) grouped by feedback type
 
