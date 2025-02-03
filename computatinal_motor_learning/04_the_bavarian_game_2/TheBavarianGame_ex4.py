@@ -3,6 +3,7 @@ import os
 import time
 import json
 
+import numpy as np
 import pygame
 import math
 import matplotlib.pyplot as plt
@@ -107,6 +108,14 @@ def draw_playfield(mask_pint=False):
     if not mask_pint:
         pygame.draw.circle(screen, YELLOW, (int(pint_pos[0]), int(pint_pos[1])), pint_radius)
         pygame.draw.circle(screen, WHITE, (int(pint_pos[0]), int(pint_pos[1])), pint_radius + 2, 2)
+
+def apply_motor_noise(noise_strength=0.2):
+    """Apply random noise as random fluctuations in movements"""
+    global pint_velocity
+
+    # Add random Gaussian noise to movement velocity
+    pint_velocity[0] += np.random.normal(0, noise_strength)
+    pint_velocity[1] += np.random.normal(0, noise_strength)
 
 
 # Precompute gradient surfaces
