@@ -87,6 +87,7 @@ noise_mean = None
 noise_std = None
 noise_x = None
 noise_y = None
+display_text = None
 pint_color = YELLOW
 
 
@@ -317,7 +318,7 @@ red_gradient = create_gradient_surface(RED_TRIANGLE, DARK_RED, LIGHT_RED, SCORIN
 #Design Experiment
 def setup_block(block_number):
     """Set up block parameters."""
-    global perturbation_active, feedback_mode, feedback_type, perturbation_force, trial_in_block, gradual_perturbation, noise_mean, noise_std, friction, pint_color
+    global perturbation_active, feedback_mode, feedback_type, perturbation_force, trial_in_block, gradual_perturbation, noise_mean, noise_std, friction, pint_color, display_text
 
     block = block_structure[block_number - 1]
     feedback_type = block['feedback'] if block['feedback'] else None
@@ -346,6 +347,9 @@ def setup_block(block_number):
     if 'pint_color' in block:
         pint_color = block['pint_color']
 
+    display_text = block.get('display_text', None)
+
+
 
 
 def handle_trial_end():
@@ -373,15 +377,15 @@ block_structure = [
     {'feedback': 'endpos', 'perturbation': True, 'sudden': True, 'num_trials': 30, 'initial_force': 0.2, 'sudden_force': 2.0, 'noise_mean': None, 'noise_std': None, 'pint_color': YELLOW},  # 30 trials with gradual perturbation
     {'feedback': 'endpos', 'perturbation': False, 'gradual': False, 'num_trials': 10, 'noise_mean': None, 'noise_std': None, 'pint_color': YELLOW},  # 10 trials without perturbation
     # ADD Trajectory feedback
-    {'feedback': 'endpos', 'perturbation': False, 'gradual': False, 'num_trials': 10, 'noise_mean': 0.1, 'noise_std': 1.5, 'friction': BASE_FRICTION - 0.03, 'pint_color': (255, 255, 102)},  # 10 trials without perturbation
+    {'feedback': 'endpos', 'perturbation': False, 'gradual': False, 'num_trials': 10, 'noise_mean': 0.1, 'noise_std': 1.5, 'friction': BASE_FRICTION - 0.03, 'pint_color': (255, 255, 102), 'display_text': True},  # 10 trials without perturbation
     {'feedback': 'endpos', 'perturbation': True, 'sudden': True, 'num_trials': 30, 'initial_force': 0.2, 'sudden_force': 2.0, 'noise_mean': 0.1, 'noise_std': 1.5, 'friction': BASE_FRICTION - 0.03, 'pint_color': (255, 255, 102)},  # 30 trials with gradual perturbation
     {'feedback': 'endpos', 'perturbation': False, 'gradual': False, 'num_trials': 10, 'noise_mean': 0.1, 'noise_std': 1.5, 'friction': BASE_FRICTION - 0.03, 'pint_color': (255, 255, 102)},  # 10 trials without perturbation
     # ADD End position feedback
-    {'feedback': 'endpos', 'perturbation': False, 'gradual': False, 'num_trials': 10, 'noise_mean': 2, 'noise_std': 3, 'friction': BASE_FRICTION - 0.02, 'pint_color': (255, 255, 179)},  # 10 trials without perturbation
+    {'feedback': 'endpos', 'perturbation': False, 'gradual': False, 'num_trials': 10, 'noise_mean': 2, 'noise_std': 3, 'friction': BASE_FRICTION - 0.02, 'pint_color': (255, 255, 179), 'display_text': True},  # 10 trials without perturbation
     {'feedback': 'endpos', 'perturbation': True, 'sudden': True, 'num_trials': 30, 'initial_force': 0.2, 'sudden_force': 2.0, 'noise_mean': 2, 'noise_std': 3, 'friction': BASE_FRICTION - 0.02, 'pint_color': (255, 255, 179)},  # 30 trials with gradual perturbation
     {'feedback': 'endpos', 'perturbation': False, 'gradual': False, 'num_trials': 10, 'noise_mean': 2, 'noise_std': 3, 'friction': BASE_FRICTION - 0.02, 'pint_color': (255, 255, 179)},  # 10 trials without perturbation
     # ADD RL feedback
-    {'feedback': 'endpos', 'perturbation': False, 'gradual': False, 'num_trials': 10, 'noise_mean': 4, 'noise_std': 6, 'friction': BASE_FRICTION - 0.01, 'pint_color': WHITE},  # 10 trials without perturbation
+    {'feedback': 'endpos', 'perturbation': False, 'gradual': False, 'num_trials': 10, 'noise_mean': 4, 'noise_std': 6, 'friction': BASE_FRICTION - 0.01, 'pint_color': WHITE, 'display_text': True},  # 10 trials without perturbation
     {'feedback': 'endpos', 'perturbation': True, 'sudden': True, 'num_trials': 30, 'initial_force': 0.2, 'sudden_force': 2.0, 'noise_mean': 4, 'noise_std': 6, 'friction': BASE_FRICTION - 0.01, 'pint_color': WHITE},  # 30 trials with gradual perturbation
     {'feedback': 'endpos', 'perturbation': False, 'gradual': False, 'num_trials': 10, 'noise_mean': 4, 'noise_std': 6, 'friction': BASE_FRICTION - 0.01, 'pint_color': WHITE},  # 10 trials without perturbation
    # # # ADD End Position Approximate
@@ -404,6 +408,8 @@ while running:
 
     # Draw playfield with optional masking
     draw_playfield(mask_pint=mask_pint)
+    if display_text is not None:
+        display_message('Drinking Beer')
 
     # Display score (only for feedbacks where score is not relevant)
     if feedback_type not in ('rl', 'endpos', 'trajectory', 'endpos_approx'):
